@@ -1,0 +1,295 @@
+@import "tailwindcss";
+
+/* ========================================
+   Whisper Design System — Premium Mobile UI
+   ======================================== */
+
+@theme {
+  /* Core Colors */
+  --color-plum-950: #08010f;
+  --color-plum-900: #0f0520;
+  --color-plum-800: #1a0a2e;
+  --color-plum-700: #2d1252;
+  --color-plum-600: #3f1a76;
+  --color-plum-500: #7c3aed;
+
+  --color-rose-500: #ec4899;
+  --color-rose-400: #f472b6;
+  --color-rose-300: #f9a8d4;
+
+  --color-gold-500: #fbbf24;
+  --color-gold-400: #fcd34d;
+
+  --color-glass-bg: rgba(255, 255, 255, 0.04);
+  --color-glass-border: rgba(255, 255, 255, 0.08);
+  --color-glass-hover: rgba(255, 255, 255, 0.07);
+
+  /* Fonts */
+  --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-display: 'Playfair Display', ui-serif, Georgia, serif;
+
+  /* Animations */
+  --animate-fade-in: fade-in 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  --animate-slide-up: slide-up 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  --animate-slide-down: slide-down 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  --animate-pulse-soft: pulse-soft 2s ease-in-out infinite;
+  --animate-scale-in: scale-in 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  --animate-shimmer: shimmer 2s ease-in-out infinite;
+  --animate-glow: glow 3s ease-in-out infinite;
+  --animate-float: float 6s ease-in-out infinite;
+}
+
+/* Keyframes */
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(24px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slide-down {
+  from { opacity: 0; transform: translateY(-12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pulse-soft {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.6; transform: scale(1.08); }
+}
+
+@keyframes scale-in {
+  from { opacity: 0; transform: scale(0.92); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes glow {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 0.8; }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-12px); }
+}
+
+@keyframes recording-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
+  50% { box-shadow: 0 0 0 12px rgba(239, 68, 68, 0); }
+}
+
+/* ========================================
+   Base Styles
+   ======================================== */
+
+* {
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+  height: -webkit-fill-available;
+}
+
+body {
+  font-family: var(--font-sans);
+  background: #08010f;
+  min-height: 100dvh;
+  min-height: -webkit-fill-available;
+  overscroll-behavior: none;
+  overflow-x: hidden;
+  color: white;
+}
+
+#root {
+  min-height: 100dvh;
+  min-height: -webkit-fill-available;
+  position: relative;
+}
+
+/* Safe area padding for notched devices */
+.safe-top { padding-top: env(safe-area-inset-top); }
+.safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
+.safe-left { padding-left: env(safe-area-inset-left); }
+.safe-right { padding-right: env(safe-area-inset-right); }
+
+/* ========================================
+   Background Gradient Layer
+   ======================================== */
+.app-bg {
+  background:
+    radial-gradient(ellipse at 20% 0%, rgba(124, 58, 237, 0.08) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 100%, rgba(236, 72, 153, 0.06) 0%, transparent 50%),
+    radial-gradient(ellipse at 50% 50%, rgba(30, 15, 60, 0.5) 0%, transparent 70%),
+    linear-gradient(180deg, #08010f 0%, #0f0520 40%, #0d0318 100%);
+}
+
+/* ========================================
+   Scrollbar Styling
+   ======================================== */
+::-webkit-scrollbar { width: 3px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 999px;
+}
+
+/* Hide scrollbar on mobile scroll containers */
+.scrollbar-hide::-webkit-scrollbar { display: none; }
+.scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* ========================================
+   Selection
+   ======================================== */
+::selection {
+  background: rgba(244, 114, 182, 0.25);
+  color: white;
+}
+
+/* ========================================
+   Glass Card Utility
+   ======================================== */
+.glass-card {
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 1.25rem;
+}
+
+.glass-card-hover {
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.glass-card-hover:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.1);
+  transform: translateY(-1px);
+}
+.glass-card-hover:active {
+  transform: scale(0.98);
+}
+
+/* ========================================
+   Rich Text Editor Styles
+   ======================================== */
+.rich-editor {
+  outline: none;
+  min-height: 160px;
+  line-height: 1.8;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 16px; /* Prevents iOS zoom on focus */
+}
+
+.rich-editor:empty::before {
+  content: attr(data-placeholder);
+  color: rgba(255, 255, 255, 0.2);
+  pointer-events: none;
+}
+
+.rich-editor b, .rich-editor strong {
+  font-weight: 600;
+  color: white;
+}
+
+.rich-editor i, .rich-editor em {
+  font-style: italic;
+  color: rgba(244, 114, 182, 0.85);
+}
+
+/* ========================================
+   Entry Content Rendering
+   ======================================== */
+.entry-content {
+  line-height: 1.75;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.9375rem;
+  letter-spacing: 0.01em;
+}
+
+.entry-content p { margin-bottom: 0.5rem; }
+.entry-content p:last-child { margin-bottom: 0; }
+.entry-content b, .entry-content strong { font-weight: 600; color: white; }
+.entry-content i, .entry-content em { color: rgba(244, 114, 182, 0.85); }
+
+/* ========================================
+   Custom Audio Player
+   ======================================== */
+.audio-progress {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 3px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  outline: none;
+  cursor: pointer;
+}
+
+.audio-progress::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #f472b6;
+  cursor: pointer;
+  box-shadow: 0 0 12px rgba(244, 114, 182, 0.5);
+}
+
+.audio-progress::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #f472b6;
+  cursor: pointer;
+  border: none;
+  box-shadow: 0 0 12px rgba(244, 114, 182, 0.5);
+}
+
+/* ========================================
+   Loading Skeleton
+   ======================================== */
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.03) 0%,
+    rgba(255, 255, 255, 0.06) 50%,
+    rgba(255, 255, 255, 0.03) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 2s ease-in-out infinite;
+  border-radius: 0.75rem;
+}
+
+/* ========================================
+   iOS Input Fix
+   ======================================== */
+input, textarea, select {
+  font-size: 16px !important; /* Prevents iOS zoom */
+}
+
+/* ========================================
+   Recording pulse
+   ======================================== */
+.recording-pulse {
+  animation: recording-pulse 1.5s ease-in-out infinite;
+}
+
+/* ========================================
+   Floating orbs (decorative)
+   ======================================== */
+.orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(60px);
+  pointer-events: none;
+  will-change: transform;
+}
