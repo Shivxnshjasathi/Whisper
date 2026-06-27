@@ -1,6 +1,7 @@
 import Avatar from '../ui/Avatar';
 import ImageGrid from './ImageGrid';
 import AudioPlayer from './AudioPlayer';
+import Reactions from './Reactions';
 import { CloudOff, MoreHorizontal, Edit2, Trash2 } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
@@ -8,7 +9,7 @@ import { useDeleteEntry } from '../../hooks/useEntries';
 import { useNavigate } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 
-export default function EntryCard({ entry }) {
+export default function EntryCard({ entry, isDetailView = false }) {
   const {
     id,
     content_html,
@@ -53,39 +54,61 @@ export default function EntryCard({ entry }) {
     }
   };
 
+  const getMoodStyles = (mood) => {
+    switch (mood) {
+      case 'happy': return 'bg-emerald-500/10 border-emerald-500/20 text-emerald-100';
+      case 'love': return 'bg-rose-500/10 border-rose-500/20 text-rose-100';
+      case 'excited': return 'bg-amber-500/10 border-amber-500/20 text-amber-100';
+      case 'peaceful': return 'bg-cyan-500/10 border-cyan-500/20 text-cyan-100';
+      case 'grateful': return 'bg-teal-500/10 border-teal-500/20 text-teal-100';
+      case 'thoughtful': return 'bg-indigo-500/10 border-indigo-500/20 text-indigo-100';
+      case 'silly': return 'bg-purple-500/10 border-purple-500/20 text-purple-100';
+      case 'sad': return 'bg-blue-500/10 border-blue-500/20 text-blue-100';
+      case 'tired': return 'bg-slate-500/10 border-slate-500/20 text-slate-100';
+      default: return 'glass-card text-white/90';
+    }
+  };
+
+  const cardStyle = mood ? getMoodStyles(mood) : 'glass-card text-white/90';
+  const cardClasses = mood 
+    ? `${cardStyle} rounded-[24px] border transition-all duration-300 hover:brightness-110`
+    : `glass-card rounded-[24px] transition-all duration-300 hover:bg-white/[0.05]`;
+
   return (
-    <article className="glass-card overflow-hidden transition-all duration-300 hover:bg-white/[0.05]">
+    <article className={cardClasses}>
       {/* Pending sync indicator bar */}
       {isPending && (
-        <div className="h-0.5 bg-gradient-to-r from-amber-400/30 via-amber-400/50 to-amber-400/30 animate-shimmer" />
+        <div className="h-0.5 bg-gradient-to-r from-amber-400/30 via-amber-400/50 to-amber-400/30 animate-shimmer rounded-t-[24px]" />
       )}
 
       <div className="p-5">
         {/* Header */}
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-3">
-            <Avatar name={authorName} size="md" />
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2">
-                <span className="font-semibold text-[14px] text-white">
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2">
+            {mood ? (
+              <>
+                <span className="text-sm" title={mood}>{getMoodEmoji(mood)}</span>
+                <span className="text-[10px] font-bold uppercase tracking-wider opacity-70">
+                  {mood}
+                </span>
+              </>
+            ) : (
+              <div className="flex items-center gap-1.5">
+                <Avatar name={authorName} size="sm" className="!w-5 !h-5 !text-[9px]" />
+                <span className="text-[10px] font-bold uppercase tracking-wider opacity-70">
                   {authorName}
                 </span>
-                {mood && (
-                  <span className="text-sm" title={mood}>
-                    {getMoodEmoji(mood)}
-                  </span>
-                )}
               </div>
-              <div className="flex items-center gap-2 mt-0.5">
-                <span className="text-[11px] text-white/20 font-medium">{timeString}</span>
-                {isPending && (
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-500/8 border border-amber-500/10">
-                    <CloudOff className="w-2.5 h-2.5 text-amber-400/70" />
-                    <span className="text-[9px] font-semibold text-amber-400/70 uppercase tracking-wider">Queued</span>
-                  </span>
-                )}
-              </div>
-            </div>
+            )}
+            
+            <span className="text-[10px] opacity-40">•</span>
+            <span className="text-[10px] font-medium opacity-50">{timeString}</span>
+
+            {isPending && (
+              <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-amber-500/10 ml-1 border border-amber-500/20">
+                <CloudOff className="w-2.5 h-2.5 text-amber-400/70" />
+              </span>
+            )}
           </div>
 
           {/* Action Menu */}
@@ -131,7 +154,10 @@ export default function EntryCard({ entry }) {
         {/* Content */}
         {content_html && (
           <div
-            className="entry-content mb-4"
+            onClick={() => {
+              if (!isDetailView) navigate(`/entry/${id}`, { state: { entry } });
+            }}
+            className={`entry-content mb-4 transition-all duration-300 ${!isDetailView ? 'cursor-pointer line-clamp-4 hover:opacity-80' : ''}`}
             dangerouslySetInnerHTML={{ __html: content_html }}
           />
         )}
@@ -148,6 +174,11 @@ export default function EntryCard({ entry }) {
           <div className="mt-3">
             <AudioPlayer src={voice_note_url} />
           </div>
+        )}
+
+        {/* Reactions (Only show if not pending and not offline) */}
+        {!isPending && (
+          <Reactions entryId={id} />
         )}
       </div>
     </article>

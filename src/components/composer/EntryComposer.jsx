@@ -1,11 +1,12 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Send, ArrowLeft, Sparkles, X, ImagePlus, Mic, Check } from 'lucide-react';
+import { Send, ArrowLeft, Sparkles, X, ImagePlus, Mic, Check, Palette } from 'lucide-react';
 import { useCreateEntry, useUpdateEntry } from '../../hooks/useEntries';
 import { supabase } from '../../lib/supabase';
 import RichTextEditor from './RichTextEditor';
 import PhotoPicker from './PhotoPicker';
 import VoiceRecorder from './VoiceRecorder';
+import DoodleCanvas from './DoodleCanvas';
 import Button from '../ui/Button';
 
 const MOODS = [
@@ -34,6 +35,7 @@ export default function EntryComposer() {
   const [mood, setMood] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
   const [isFetchingEdit, setIsFetchingEdit] = useState(!!editId);
+  const [showDoodle, setShowDoodle] = useState(false);
 
   useEffect(() => {
     if (editId) {
@@ -103,30 +105,6 @@ export default function EntryComposer() {
 
   return (
     <div className="flex flex-col min-h-[100dvh] md:min-h-0 animate-fade-in w-full max-w-3xl mx-auto md:my-6 md:bg-plum-950/40 md:backdrop-blur-xl md:border md:border-white/[0.04] md:rounded-3xl md:shadow-2xl overflow-hidden">
-      {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-white/[0.04]">
-        <button
-          onClick={() => navigate(-1)}
-          className="w-10 h-10 rounded-xl flex items-center justify-center text-white/40 hover:text-white hover:bg-white/5 transition-all active:scale-90"
-        >
-          <ArrowLeft className="w-5 h-5" />
-        </button>
-
-        <span className="text-[13px] font-semibold text-white/40 tracking-wide uppercase">
-          {editId ? 'Edit Whisper' : 'New Whisper'}
-        </span>
-
-        <Button
-          size="sm"
-          disabled={!hasContent}
-          loading={isSaving}
-          onClick={handleSave}
-          className="!rounded-xl !px-5"
-        >
-          {editId ? <Check className="w-3.5 h-3.5" /> : <Send className="w-3.5 h-3.5" />}
-          {editId ? 'Save' : (!navigator.onLine ? 'Queue' : 'Share')}
-        </Button>
-      </div>
 
       {/* Mood picker */}
       <div className="px-4 py-3 border-b border-white/[0.03]">
@@ -185,6 +163,17 @@ export default function EntryComposer() {
         </div>
       )}
 
+      {/* Doodle Canvas Modal */}
+      {showDoodle && (
+        <DoodleCanvas
+          onClose={() => setShowDoodle(false)}
+          onSave={(file) => {
+            handleAddPhotos([file]);
+            setShowDoodle(false);
+          }}
+        />
+      )}
+
       {/* Bottom toolbar */}
       <div className="border-t border-white/[0.04] px-4 pt-3 pb-[calc(12px+68px+env(safe-area-inset-bottom))] md:pb-3 md:safe-bottom">
         <div className="flex items-center justify-between">
@@ -213,6 +202,18 @@ export default function EntryComposer() {
                 onRecorded={handleVoiceRecorded}
               />
             )}
+
+            {/* Doodle (hidden in edit mode) */}
+            {!editId && (
+              <button
+                type="button"
+                onClick={() => setShowDoodle(true)}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-white/50 bg-white/5 hover:text-rose-400/90 hover:bg-rose-400/10 transition-all cursor-pointer active:scale-90"
+              >
+                <Palette className="w-4 h-4" />
+                <span className="text-xs font-medium">Doodle</span>
+              </button>
+            )}
           </div>
 
           {/* Offline notice */}
@@ -223,6 +224,20 @@ export default function EntryComposer() {
             </div>
           )}
         </div>
+      </div>
+
+      {/* Floating Action Button */}
+      <div className="fixed right-5 bottom-[calc(90px+env(safe-area-inset-bottom))] z-50 md:bottom-10 md:right-10">
+        <Button
+          size="lg"
+          disabled={!hasContent}
+          loading={isSaving}
+          onClick={handleSave}
+          className="!rounded-2xl !px-6 shadow-xl shadow-rose-500/25 transition-transform hover:scale-105 active:scale-95"
+        >
+          {editId ? <Check className="w-4 h-4" /> : <Send className="w-4 h-4" />}
+          {editId ? 'Save' : (!navigator.onLine ? 'Queue' : 'Share')}
+        </Button>
       </div>
     </div>
   );

@@ -10,6 +10,9 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       includeAssets: ['icons/*.png', 'offline.html'],
+      devOptions: {
+        enabled: true,
+      },
       manifest: {
         name: 'Whisper — Shared Journal',
         short_name: 'Whisper',

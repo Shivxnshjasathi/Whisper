@@ -80,6 +80,14 @@
   50% { transform: translateY(-12px); }
 }
 
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-8px); }
+  40% { transform: translateX(8px); }
+  60% { transform: translateX(-8px); }
+  80% { transform: translateX(8px); }
+}
+
 @keyframes recording-pulse {
   0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
   50% { box-shadow: 0 0 0 12px rgba(239, 68, 68, 0); }
@@ -213,6 +221,9 @@ body {
   color: rgba(255, 255, 255, 0.8);
   font-size: 0.9375rem;
   letter-spacing: 0.01em;
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+  word-break: break-word;
 }
 
 .entry-content p { margin-bottom: 0.5rem; }

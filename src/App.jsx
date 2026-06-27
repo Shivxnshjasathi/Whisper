@@ -8,12 +8,15 @@ import { AnimatePresence } from 'framer-motion';
 import AppShell from './components/layout/AppShell';
 import LoginScreen from './components/auth/LoginScreen';
 import RoomSetup from './components/auth/RoomSetup';
+import LockScreen from './components/auth/LockScreen';
 import { FullPageLoader } from './components/ui/LoadingSpinner';
 import PageTransition from './components/layout/PageTransition';
+import { useState } from 'react';
 
 import Home from './pages/Home';
 import Compose from './pages/Compose';
 import Settings from './pages/Settings';
+import EntryDetail from './pages/EntryDetail';
 
 // Configure React Query
 const queryClient = new QueryClient({
@@ -43,6 +46,9 @@ function AnimatedRoutes() {
           <Route path="compose" element={
             <PageTransition><Compose /></PageTransition>
           } />
+          <Route path="entry/:id" element={
+            <PageTransition><EntryDetail /></PageTransition>
+          } />
           <Route path="settings" element={
             <PageTransition><Settings /></PageTransition>
           } />
@@ -55,6 +61,19 @@ function AnimatedRoutes() {
 
 function ProtectedRoutes() {
   const { isAuthenticated, hasRoom, loading } = useAuth();
+  const [isLocked, setIsLocked] = useState(!!localStorage.getItem('whisper_pin'));
+
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') {
+        if (localStorage.getItem('whisper_pin')) {
+          setIsLocked(true);
+        }
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, []);
 
   // Initialize sync manager
   useEffect(() => {
@@ -76,10 +95,23 @@ function ProtectedRoutes() {
     return <RoomSetup />;
   }
 
+  if (isLocked) {
+    return <LockScreen onUnlock={() => setIsLocked(false)} />;
+  }
+
   return <AnimatedRoutes />;
 }
 
 export default function App() {
+  useEffect(() => {
+    const handleBeforeInstallPrompt = (e) => {
+      e.preventDefault();
+      window.deferredPrompt = e;
+    };
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    return () => window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+  }, []);
+
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>

@@ -233,3 +233,141 @@ export function useDeleteEntry() {
     },
   });
 }
+
+/**
+ * Hook: Fetch "On this day" memories (exactly 1 year ago)
+ */
+export function useMemories(roomId) {
+  return useQuery({
+    queryKey: ['memories', roomId],
+    queryFn: async () => {
+      if (!roomId) return [];
+      const oneYearAgo = new Date();
+      oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+      
+      const startOfDay = new Date(oneYearAgo);
+      startOfDay.setHours(0,0,0,0);
+      const endOfDay = new Date(oneYearAgo);
+      endOfDay.setHours(23,59,59,999);
+
+      const { data, error } = await supabase
+        .from('entries')
+        .select('*')
+        .eq('room_id', roomId)
+        .gte('created_at', startOfDay.toISOString())
+        .lte('created_at', endOfDay.toISOString())
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!roomId,
+    staleTime: 60 * 60 * 1000,
+  });
+}
+
+/**
+ * Hook: Fetch comments for an entry.
+ */
+export function useComments(entryId) {
+  return useQuery({
+    queryKey: ['comments', entryId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('comments')
+        .select('*')
+        .eq('entry_id', entryId)
+        .order('created_at', { ascending: true });
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!entryId,
+  });
+}
+
+/**
+ * Hook: Add a comment
+ */
+export function useAddComment() {
+  const queryClient = useQueryClient();
+  const { user } = useAuth();
+
+  return useMutation({
+    mutationFn: async ({ entryId, content }) => {
+      const { data, error } = await supabase
+        .from('comments')
+        .insert({
+          entry_id: entryId,
+          user_id: user.id,
+          content,
+        })
+        .select()
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (_, { entryId }) => {
+      queryClient.invalidateQueries({ queryKey: ['comments', entryId] });
+    },
+    onError: (error) => {
+      console.error(error);
+      alert(`Could not save comment. If you haven't run the Phase 3 SQL in Supabase yet, you need to do that first! (${error.message})`);
+    }
+  });
+}
+
+/**
+ * Hook: Fetch reactions for an entry.
+ */
+export function useReactions(entryId) {
+  return useQuery({
+    queryKey: ['reactions', entryId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('reactions')
+        .select('*')
+        .eq('entry_id', entryId);
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!entryId,
+  });
+}
+
+/**
+ * Hook: Toggle reaction
+ */
+export function useToggleReaction() {
+  const queryClient = useQueryClient();
+  const { user } = useAuth();
+
+  return useMutation({
+    mutationFn: async ({ entryId, emoji, hasReacted }) => {
+      if (hasReacted) {
+        const { error } = await supabase
+          .from('reactions')
+          .delete()
+          .eq('entry_id', entryId)
+          .eq('user_id', user.id)
+          .eq('emoji', emoji);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from('reactions')
+          .insert({
+            entry_id: entryId,
+            user_id: user.id,
+            emoji,
+          });
+        if (error) throw error;
+      }
+    },
+    onSuccess: (_, { entryId }) => {
+      queryClient.invalidateQueries({ queryKey: ['reactions', entryId] });
+    },
+    onError: (error) => {
+      console.error(error);
+      alert(`Could not save reaction. If you haven't run the Phase 3 SQL in Supabase yet, you need to do that first! (${error.message})`);
+    }
+  });
+}

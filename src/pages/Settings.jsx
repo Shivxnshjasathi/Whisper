@@ -10,6 +10,7 @@ export default function Settings() {
   const [pendingCount, setPendingCount] = useState(0);
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [syncing, setSyncing] = useState(false);
+  const [hasPasscode, setHasPasscode] = useState(!!localStorage.getItem('whisper_pin'));
 
   useEffect(() => {
     const loadPending = async () => {
@@ -47,6 +48,21 @@ export default function Settings() {
       if (!confirmed) return;
     }
     await signOut();
+  };
+
+  const handleTogglePasscode = () => {
+    if (hasPasscode) {
+      localStorage.removeItem('whisper_pin');
+      setHasPasscode(false);
+    } else {
+      const pin = window.prompt("Enter a 4-digit PIN to lock your diary:");
+      if (pin && pin.length === 4 && /^\d+$/.test(pin)) {
+        localStorage.setItem('whisper_pin', pin);
+        setHasPasscode(true);
+      } else if (pin) {
+        alert("Invalid PIN. Must be exactly 4 digits.");
+      }
+    }
   };
 
   return (
@@ -148,9 +164,17 @@ export default function Settings() {
             <div className="w-9 h-9 rounded-xl bg-rose-500/10 flex items-center justify-center">
               <Shield className="w-4 h-4 text-rose-400" />
             </div>
-            <span className="text-[14px] text-white/60">Privacy</span>
+            <div>
+              <span className="text-[14px] text-white/60 block">Passcode Lock</span>
+              <span className="text-[11px] text-white/20">Require PIN to open app</span>
+            </div>
           </div>
-          <span className="text-[12px] text-white/20 font-medium">Private & Encrypted</span>
+          <button
+            onClick={handleTogglePasscode}
+            className={`w-11 h-6 rounded-full transition-colors flex items-center px-0.5 ${hasPasscode ? 'bg-emerald-500' : 'bg-white/10'}`}
+          >
+            <div className={`w-5 h-5 rounded-full bg-white transition-transform ${hasPasscode ? 'translate-x-5' : 'translate-x-0'}`} />
+          </button>
         </div>
       </div>
 
@@ -165,13 +189,28 @@ export default function Settings() {
             <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-rose-400/10 to-violet-500/10 flex items-center justify-center flex-shrink-0">
               <Download className="w-4 h-4 text-rose-400" />
             </div>
-            <div>
+            <div className="flex-1">
               <h4 className="text-[14px] font-medium text-white/70 mb-1">Install Whisper</h4>
-              <p className="text-[12px] text-white/25 leading-relaxed">
+              <p className="text-[12px] text-white/25 leading-relaxed mb-3">
                 <span className="text-white/35">iOS:</span> Share → Add to Home Screen
                 <br />
                 <span className="text-white/35">Android:</span> Menu → Install app
               </p>
+              <button
+                onClick={() => {
+                  if (window.deferredPrompt) {
+                    window.deferredPrompt.prompt();
+                    window.deferredPrompt.userChoice.then(() => {
+                      window.deferredPrompt = null;
+                    });
+                  } else {
+                    alert("The automatic install prompt isn't ready. This usually happens if you're testing on a local network without HTTPS. Please use your browser's menu and select 'Install App' or 'Add to Home screen'.");
+                  }
+                }}
+                className="w-full py-2 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 rounded-xl text-[13px] font-medium transition-colors"
+              >
+                Trigger Install Prompt
+              </button>
             </div>
           </div>
         </div>

@@ -1,10 +1,11 @@
 import { useEffect, useRef, useCallback } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
-import { useTimeline, usePendingEntries, useRealtimeEntries } from '../../hooks/useEntries';
+import { useTimeline, usePendingEntries, useRealtimeEntries, useMemories } from '../../hooks/useEntries';
 import EntryCard from './EntryCard';
 import LoadingSpinner from '../ui/LoadingSpinner';
 import { BookHeart, RefreshCw, PenLine } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import PullToRefresh from '../ui/PullToRefresh';
 
 export default function Timeline() {
   const { profile } = useAuth();
@@ -23,6 +24,7 @@ export default function Timeline() {
   } = useTimeline(roomId);
 
   const { data: pendingEntries = [] } = usePendingEntries();
+  const { data: memories = [] } = useMemories(roomId);
 
   // Subscribe to real-time updates
   useRealtimeEntries(roomId);
@@ -122,43 +124,88 @@ export default function Timeline() {
   }
 
   return (
-    <div className="px-4 py-6 md:py-8 max-w-[1400px] mx-auto w-full">
-      {/* Pull to refresh indicator */}
-      <button
-        onClick={handleRefresh}
-        disabled={isRefetching}
-        className="w-full flex items-center justify-center gap-2 py-3 mb-2 text-[11px] text-white/20 hover:text-white/35 transition-colors tracking-wide uppercase"
-      >
-        <RefreshCw className={`w-3 h-3 ${isRefetching ? 'animate-spin' : ''}`} />
-        {isRefetching ? 'Refreshing...' : 'Refresh'}
-      </button>
+    <PullToRefresh onRefresh={handleRefresh} isRefetching={isRefetching}>
+      <div className="px-4 py-6 md:py-8 max-w-[1400px] mx-auto w-full">
 
-      {/* Grouped entries */}
-      {Object.entries(groupedEntries).map(([dateLabel, entries]) => (
-        <div key={dateLabel} className="mb-8">
-          {/* Date separator */}
-          <div className="flex items-center gap-4 mb-5 px-1">
-            <div className="h-px flex-1 bg-gradient-to-r from-transparent via-white/[0.06] to-transparent" />
-            <span className="text-[11px] font-semibold text-white/20 uppercase tracking-[0.15em]">
-              {dateLabel}
+      {/* Memories */}
+      {memories.length > 0 && (
+        <div className="mb-6 md:mb-10 animate-fade-in">
+          <div className="flex items-center gap-4 mb-8 mt-2 px-1">
+            <div className="h-px flex-1 bg-gradient-to-r from-transparent via-gold-400/30 to-transparent" />
+            <span className="text-[11px] font-bold text-gold-400 uppercase tracking-[0.2em] flex items-center gap-2">
+              ✨ On this day
             </span>
-            <div className="h-px flex-1 bg-gradient-to-r from-transparent via-white/[0.06] to-transparent" />
+            <div className="h-px flex-1 bg-gradient-to-r from-transparent via-gold-400/30 to-transparent" />
           </div>
 
-          {/* Entry cards - Masonry Grid */}
-          <div className="columns-1 md:columns-2 xl:columns-3 gap-5">
-            {entries.map((entry, i) => (
-              <div
-                key={entry.id}
-                className="animate-slide-up break-inside-avoid mb-5"
-                style={{ animationDelay: `${i * 60}ms`, animationFillMode: 'both' }}
-              >
-                <EntryCard entry={entry} />
-              </div>
-            ))}
+          <div className="flex gap-4 md:gap-8">
+            <div className="w-12 md:w-16 flex-shrink-0 flex flex-col items-center pt-1 md:pt-2">
+              <span className="text-2xl md:text-3xl font-display font-bold text-gold-400 leading-none mb-1">
+                {new Date(memories[0].created_at).getDate()}
+              </span>
+              <span className="text-[10px] md:text-xs font-semibold text-gold-400/60 uppercase tracking-wider">
+                {new Date(memories[0].created_at).getFullYear()}
+              </span>
+            </div>
+            
+            <div className="flex-1 flex flex-col gap-4 md:gap-5 min-w-0">
+              {memories.map((entry, i) => (
+                <div key={`memory-${entry.id}`} className="relative">
+                  <div className="absolute -inset-1 bg-gold-400/10 rounded-[28px] blur-md z-0" />
+                  <div className="relative z-10">
+                    <EntryCard entry={entry} />
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
-      ))}
+      )}
+
+      {/* Grouped entries */}
+      {groupedEntries.map((group, groupIdx) => {
+        const showMonth = groupIdx === 0 || group.monthYear !== groupedEntries[groupIdx - 1].monthYear;
+        
+        return (
+          <div key={group.dateKey} className="mb-6 md:mb-10">
+            {/* Month separator */}
+            {showMonth && (
+              <div className="flex items-center gap-4 mb-8 mt-2 px-1">
+                <div className="h-px flex-1 bg-gradient-to-r from-transparent via-white/[0.06] to-transparent" />
+                <span className="text-[11px] font-bold text-white/30 uppercase tracking-[0.2em]">
+                  {group.monthYear}
+                </span>
+                <div className="h-px flex-1 bg-gradient-to-r from-transparent via-white/[0.06] to-transparent" />
+              </div>
+            )}
+
+            <div className="flex gap-4 md:gap-8">
+              {/* Left Date Column */}
+              <div className="w-12 md:w-16 flex-shrink-0 flex flex-col items-center pt-1 md:pt-2">
+                <span className="text-2xl md:text-3xl font-display font-bold text-white/90 leading-none mb-1">
+                  {group.dayNum}
+                </span>
+                <span className="text-[10px] md:text-xs font-semibold text-white/40 uppercase tracking-wider">
+                  {group.dayName}
+                </span>
+              </div>
+              
+              {/* Right Entries Column */}
+              <div className="flex-1 flex flex-col gap-4 md:gap-5 min-w-0">
+                {group.entries.map((entry, i) => (
+                  <div
+                    key={entry.id}
+                    className="animate-slide-up"
+                    style={{ animationDelay: `${i * 60}ms`, animationFillMode: 'both' }}
+                  >
+                    <EntryCard entry={entry} />
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        );
+      })}
 
       {/* Load more trigger */}
       {hasNextPage && (
@@ -175,7 +222,8 @@ export default function Timeline() {
           </p>
         </div>
       )}
-    </div>
+      </div>
+    </PullToRefresh>
   );
 }
 
@@ -183,31 +231,27 @@ export default function Timeline() {
  * Group entries by date label (Today, Yesterday, or date string).
  */
 function groupByDate(entries) {
-  const groups = {};
-  const now = new Date();
-  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const yesterday = new Date(today);
-  yesterday.setDate(yesterday.getDate() - 1);
+  const groups = [];
+  let currentGroup = null;
 
   for (const entry of entries) {
     const entryDate = new Date(entry.created_at);
-    const entryDay = new Date(entryDate.getFullYear(), entryDate.getMonth(), entryDate.getDate());
+    const dayNum = entryDate.toLocaleDateString('en-US', { day: '2-digit' });
+    const dayName = entryDate.toLocaleDateString('en-US', { weekday: 'short' });
+    const monthYear = entryDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+    const dateKey = `${entryDate.getFullYear()}-${entryDate.getMonth()}-${entryDate.getDate()}`;
 
-    let label;
-    if (entryDay.getTime() === today.getTime()) {
-      label = 'Today';
-    } else if (entryDay.getTime() === yesterday.getTime()) {
-      label = 'Yesterday';
-    } else {
-      label = entryDate.toLocaleDateString('en-US', {
-        weekday: 'short',
-        month: 'short',
-        day: 'numeric',
-      });
+    if (!currentGroup || currentGroup.dateKey !== dateKey) {
+      currentGroup = {
+        dateKey,
+        dayNum,
+        dayName,
+        monthYear,
+        entries: []
+      };
+      groups.push(currentGroup);
     }
-
-    if (!groups[label]) groups[label] = [];
-    groups[label].push(entry);
+    currentGroup.entries.push(entry);
   }
 
   return groups;

@@ -118,3 +118,37 @@ DROP POLICY IF EXISTS "Authenticated users can upload media" ON storage.objects;
 
 CREATE POLICY "Anyone can read media" ON storage.objects FOR SELECT USING (bucket_id = 'diary_media');
 CREATE POLICY "Authenticated users can upload media" ON storage.objects FOR INSERT WITH CHECK (bucket_id = 'diary_media' AND auth.role() = 'authenticated');
+
+-- REACTIONS TABLE
+CREATE TABLE IF NOT EXISTS reactions (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  entry_id UUID NOT NULL REFERENCES entries(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  emoji TEXT NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  UNIQUE(entry_id, user_id, emoji)
+);
+
+-- COMMENTS TABLE
+CREATE TABLE IF NOT EXISTS comments (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  entry_id UUID NOT NULL REFERENCES entries(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  content TEXT NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- Enable RLS
+ALTER TABLE reactions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE comments ENABLE ROW LEVEL SECURITY;
+
+-- Policies for reactions
+CREATE POLICY "Users can read reactions in their rooms" ON reactions FOR SELECT USING (EXISTS (SELECT 1 FROM entries JOIN room_members ON room_members.room_id = entries.room_id WHERE entries.id = reactions.entry_id AND room_members.user_id = auth.uid()));
+CREATE POLICY "Users can add reactions" ON reactions FOR INSERT WITH CHECK (auth.uid() = user_id AND EXISTS (SELECT 1 FROM entries JOIN room_members ON room_members.room_id = entries.room_id WHERE entries.id = reactions.entry_id AND room_members.user_id = auth.uid()));
+CREATE POLICY "Users can remove their own reactions" ON reactions FOR DELETE USING (auth.uid() = user_id);
+
+-- Policies for comments
+CREATE POLICY "Users can read comments in their rooms" ON comments FOR SELECT USING (EXISTS (SELECT 1 FROM entries JOIN room_members ON room_members.room_id = entries.room_id WHERE entries.id = comments.entry_id AND room_members.user_id = auth.uid()));
+CREATE POLICY "Users can add comments" ON comments FOR INSERT WITH CHECK (auth.uid() = user_id AND EXISTS (SELECT 1 FROM entries JOIN room_members ON room_members.room_id = entries.room_id WHERE entries.id = comments.entry_id AND room_members.user_id = auth.uid()));
+CREATE POLICY "Users can delete their own comments" ON comments FOR DELETE USING (auth.uid() = user_id);
