@@ -2,12 +2,14 @@ import Avatar from '../ui/Avatar';
 import ImageGrid from './ImageGrid';
 import AudioPlayer from './AudioPlayer';
 import Reactions from './Reactions';
-import { CloudOff, MoreHorizontal, Edit2, Trash2, MapPin, CloudSun, Quote, Volume2, VolumeX, MessageCircle } from 'lucide-react';
+import { CloudOff, MoreHorizontal, Edit2, Trash2, Quote, Volume2, VolumeX, MessageCircle, Share2, CheckCircle2 } from 'lucide-react';
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useDeleteEntry } from '../../hooks/useEntries';
 import { useNavigate } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
+import toast from 'react-hot-toast';
+import { copyToClipboard } from '../../lib/clipboard';
 
 export default function EntryCard({ entry, isDetailView = false }) {
   const {
@@ -16,9 +18,6 @@ export default function EntryCard({ entry, isDetailView = false }) {
     media_urls = [],
     voice_note_url,
     mood,
-    location_name,
-    weather_temp,
-    weather_condition,
     voice_transcript,
     created_at,
     isPending,
@@ -35,6 +34,42 @@ export default function EntryCard({ entry, isDetailView = false }) {
   const isAuthor = user?.id === author_id && !isPending;
   const authorName = entry.authorName || (user?.id === author_id ? 'You' : 'Partner');
   const timeString = formatTime(created_at);
+
+  const handleShare = async (e) => {
+    e.stopPropagation();
+    console.log("Share button clicked!");
+    const plainText = (content_html || '').replace(/<[^>]*>?/gm, '');
+    const shareData = {
+      title: 'Whisper Entry',
+      text: plainText || 'A whisper entry',
+    };
+    console.log("Share data:", shareData);
+
+    if (navigator.share) {
+      console.log("navigator.share is available. Attempting native share...");
+      try {
+        await navigator.share(shareData);
+        console.log("Native share successful.");
+      } catch (err) {
+        if (err.name !== 'AbortError') {
+          console.error('Share failed', err);
+          toast.error("Failed to share");
+        } else {
+          console.log("Share aborted by user.");
+        }
+      }
+    } else {
+      console.log("navigator.share NOT available. Attempting clipboard fallback...");
+      try {
+        await copyToClipboard(shareData.text);
+        console.log("Copied to clipboard successfully.");
+        toast.success("Copied to clipboard!");
+      } catch (err) {
+        console.error("Clipboard writeText failed:", err);
+        toast.error("Failed to copy");
+      }
+    }
+  };
 
   // Close menu when clicking outside
   useEffect(() => {
@@ -55,7 +90,9 @@ export default function EntryCard({ entry, isDetailView = false }) {
   const handleDelete = () => {
     setShowMenu(false);
     if (window.confirm('Are you sure you want to delete this whisper?')) {
-      deleteMutation.mutate(id);
+      deleteMutation.mutate(id, {
+        onSuccess: () => toast.success("Whisper deleted")
+      });
     }
   };
 
@@ -227,28 +264,19 @@ export default function EntryCard({ entry, isDetailView = false }) {
           </div>
         )}
 
-        {/* Footer: Location, Weather, Reactions */}
+        {/* Footer: Reactions & Comments */}
         <div className="mt-4 pt-3 border-t border-white/5 flex flex-wrap items-center justify-between gap-3">
-          {/* Location & Weather */}
-          <div className="flex flex-wrap items-center gap-3">
-            {location_name && (
-              <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-white/[0.03] text-white/40">
-                <MapPin className="w-3 h-3" />
-                <span className="text-[10px] uppercase tracking-wider">{location_name.split(',')[0]}</span>
-              </div>
-            )}
-            {weather_condition && weather_temp && (
-              <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-white/[0.03] text-white/40">
-                <CloudSun className="w-3 h-3" />
-                <span className="text-[10px] uppercase tracking-wider">{Math.round(weather_temp)}°</span>
-              </div>
-            )}
-          </div>
-
-          {/* Reactions & Comments */}
           {!isPending && (
             <div className="flex items-center justify-end flex-1 gap-1">
               <Reactions entryId={id} />
+              
+              <button
+                onClick={handleShare}
+                className="w-7 h-7 rounded-full flex items-center justify-center bg-white/5 text-white/50 hover:bg-white/10 hover:text-white/80 transition-colors ml-1"
+                title="Share entry"
+              >
+                <Share2 className="w-3.5 h-3.5" />
+              </button>
               
               {!isDetailView && (
                 <button
@@ -265,6 +293,7 @@ export default function EntryCard({ entry, isDetailView = false }) {
           )}
         </div>
       </div>
+      
     </article>
   );
 }

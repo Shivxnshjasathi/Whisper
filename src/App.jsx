@@ -107,6 +107,8 @@ function ProtectedRoutes() {
   return <AnimatedRoutes />;
 }
 
+import { Toaster } from 'react-hot-toast';
+
 export default function App() {
   useEffect(() => {
     const handleBeforeInstallPrompt = (e) => {
@@ -120,6 +122,19 @@ export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
+        <Toaster
+          position="bottom-center"
+          toastOptions={{
+            style: {
+              background: 'rgba(15, 23, 42, 0.9)',
+              color: '#fff',
+              border: '1px solid rgba(255,255,255,0.1)',
+              borderRadius: '99px',
+              fontSize: '13px',
+              backdropFilter: 'blur(8px)',
+            },
+          }}
+        />
         <AuthProvider>
           <BrowserRouter>
             <Routes>

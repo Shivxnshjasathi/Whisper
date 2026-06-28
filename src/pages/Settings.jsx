@@ -6,6 +6,8 @@ import { LogOut, Heart, Shield, Smartphone, Wifi, WifiOff, Bell, Download, Palet
 import { useState, useEffect } from 'react';
 import { getPendingCount, syncPendingEntries } from '../lib/syncManager';
 import { supabase } from '../lib/supabase';
+import toast from 'react-hot-toast';
+import { copyToClipboard } from '../lib/clipboard';
 
 export default function Settings() {
   const { user, profile, signOut } = useAuth();
@@ -144,11 +146,18 @@ export default function Settings() {
         <h3 className="text-[11px] font-semibold text-white/15 uppercase tracking-[0.15em] px-1 mb-3">
           Your Diary
         </h3>
+
+
         <div 
           className="glass-card p-4 flex items-center justify-between group cursor-pointer hover:bg-white/[0.05] transition-colors"
-          onClick={() => {
-            navigator.clipboard.writeText(profile?.roomId);
-            alert('Invite code copied!');
+          onClick={async () => {
+            try {
+              await copyToClipboard(profile?.roomId);
+              toast.success('Invite code copied!');
+            } catch (err) {
+              console.error(err);
+              toast.error('Failed to copy');
+            }
           }}
         >
           <div>

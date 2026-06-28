@@ -13,8 +13,6 @@ export default function Timeline() {
   const navigate = useNavigate();
   const roomId = profile?.roomId;
   
-  const [filterMood, setFilterMood] = useState('all');
-  
   // From AppShell context
   const { isSearchExpanded, setIsSearchExpanded, searchTerm, setSearchTerm } = useOutletContext() || { 
     isSearchExpanded: false, 
@@ -75,9 +73,6 @@ export default function Timeline() {
       if (!contentStr.includes(lowerTerm) && !transcriptStr.includes(lowerTerm)) {
         matches = false;
       }
-    }
-    if (filterMood !== 'all') {
-      if (entry.mood !== filterMood) matches = false;
     }
     return matches;
   });
@@ -155,33 +150,6 @@ export default function Timeline() {
   return (
     <PullToRefresh onRefresh={handleRefresh} isRefetching={isRefetching}>
       <div className="px-4 py-6 md:py-8 max-w-[1400px] mx-auto w-full">
-
-      {/* Mood Filter Toggle */}
-      {isSearchExpanded && (
-        <div className="mb-6 max-w-2xl mx-auto flex justify-end animate-fade-in">
-          <div className="relative w-40">
-            <select
-              value={filterMood}
-              onChange={(e) => setFilterMood(e.target.value)}
-              className="appearance-none block w-full pl-3 pr-8 py-2 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:ring-1 focus:ring-accent-400 focus:border-accent-400 text-sm transition-all cursor-pointer"
-            >
-              <option value="all">All Moods</option>
-              <option value="happy">Happy</option>
-              <option value="love">Love</option>
-              <option value="excited">Excited</option>
-              <option value="peaceful">Peaceful</option>
-              <option value="grateful">Grateful</option>
-              <option value="thoughtful">Thinking</option>
-              <option value="silly">Silly</option>
-              <option value="sad">Sad</option>
-              <option value="tired">Tired</option>
-            </select>
-            <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
-              <Filter className="h-3.5 w-3.5 text-white/30" />
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Memories */}
       {memories.length > 0 && (

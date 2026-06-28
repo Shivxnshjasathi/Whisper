@@ -142,14 +142,7 @@ async function syncSingleEntry(localId) {
       author_id: entry.author_id,
       content_html: entry.content_html,
       media_urls: mediaUrls,
-      voice_note_url: voiceNoteUrl,
-      mood: entry.mood || null,
-      location_lat: entry.location_lat || null,
-      location_lng: entry.location_lng || null,
-      location_name: entry.location_name || null,
-      weather_condition: entry.weather_condition || null,
-      weather_temp: entry.weather_temp || null,
-      voice_transcript: entry.voice_transcript || null,
+      voice_note_url: voiceNoteUrl
     });
 
     if (error) throw error;

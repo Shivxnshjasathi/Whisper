@@ -66,14 +66,7 @@ export function useCreateEntry() {
     mutationFn: async ({ 
       contentHtml, 
       mediaFiles = [], 
-      voiceBlob = null, 
-      mood = null,
-      locationLat = null,
-      locationLng = null,
-      locationName = null,
-      weatherCondition = null,
-      weatherTemp = null,
-      voiceTranscript = null
+      voiceBlob = null
     }) => {
       const roomId = profile?.roomId;
       if (!roomId) throw new Error('No room found');
@@ -84,14 +77,7 @@ export function useCreateEntry() {
           {
             room_id: roomId,
             author_id: user.id,
-            content_html: contentHtml,
-            mood,
-            location_lat: locationLat,
-            location_lng: locationLng,
-            location_name: locationName,
-            weather_condition: weatherCondition,
-            weather_temp: weatherTemp,
-            voice_transcript: voiceTranscript
+            content_html: contentHtml
           },
           mediaFiles,
           voiceBlob
@@ -148,14 +134,7 @@ export function useCreateEntry() {
           author_id: user.id,
           content_html: contentHtml,
           media_urls: mediaUrls,
-          voice_note_url: voiceNoteUrl,
-          mood,
-          location_lat: locationLat,
-          location_lng: locationLng,
-          location_name: locationName,
-          weather_condition: weatherCondition,
-          weather_temp: weatherTemp,
-          voice_transcript: voiceTranscript
+          voice_note_url: voiceNoteUrl
         })
         .select()
         .single();
@@ -218,10 +197,10 @@ export function useUpdateEntry() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ entryId, contentHtml, mood = null }) => {
+    mutationFn: async ({ entryId, contentHtml }) => {
       const { data, error } = await supabase
         .from('entries')
-        .update({ content_html: contentHtml, mood })
+        .update({ content_html: contentHtml })
         .eq('id', entryId)
         .select()
         .single();

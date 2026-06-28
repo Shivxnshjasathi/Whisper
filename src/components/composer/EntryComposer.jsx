@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Send, ArrowLeft, Sparkles, X, ImagePlus, Mic, Check, Palette, MapPin } from 'lucide-react';
+import { Send, ArrowLeft, Sparkles, X, ImagePlus, Mic, Check, Palette } from 'lucide-react';
 import { useCreateEntry, useUpdateEntry } from '../../hooks/useEntries';
 import { supabase } from '../../lib/supabase';
 import RichTextEditor from './RichTextEditor';
@@ -8,6 +8,7 @@ import PhotoPicker from './PhotoPicker';
 import VoiceRecorder from './VoiceRecorder';
 import DoodleCanvas from './DoodleCanvas';
 import Button from '../ui/Button';
+import toast from 'react-hot-toast';
 
 const MOODS = [
   { value: 'happy', emoji: '😊', label: 'Happy' },
@@ -34,13 +35,6 @@ export default function EntryComposer() {
   const [voiceBlob, setVoiceBlob] = useState(null);
   const [voiceTranscript, setVoiceTranscript] = useState('');
   const [mood, setMood] = useState(null);
-
-  const [locationLat, setLocationLat] = useState(null);
-  const [locationLng, setLocationLng] = useState(null);
-  const [locationName, setLocationName] = useState(null);
-  const [weatherCondition, setWeatherCondition] = useState(null);
-  const [weatherTemp, setWeatherTemp] = useState(null);
-  const [isLocating, setIsLocating] = useState(false);
 
   const [isSaving, setIsSaving] = useState(false);
   const [isFetchingEdit, setIsFetchingEdit] = useState(!!editId);
@@ -80,67 +74,32 @@ export default function EntryComposer() {
     setVoiceTranscript('');
   }, []);
 
-  const handleLocate = async () => {
-    if (!navigator.geolocation) {
-      alert('Geolocation is not supported by your browser');
-      return;
-    }
-
-    setIsLocating(true);
-    navigator.geolocation.getCurrentPosition(async (position) => {
-      const lat = position.coords.latitude;
-      const lng = position.coords.longitude;
-      setLocationLat(lat);
-      setLocationLng(lng);
-      setLocationName(`${lat.toFixed(2)}, ${lng.toFixed(2)}`); // Simplified
-
-      try {
-        const weatherRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&current_weather=true`);
-        const weatherData = await weatherRes.json();
-        if (weatherData && weatherData.current_weather) {
-          setWeatherTemp(weatherData.current_weather.temperature);
-          setWeatherCondition(weatherData.current_weather.weathercode.toString()); // Could map to string
-        }
-      } catch (err) {
-        console.error("Failed to fetch weather", err);
-      }
-
-      setIsLocating(false);
-    }, (error) => {
-      console.error(error);
-      alert('Unable to retrieve your location');
-      setIsLocating(false);
-    });
-  };
 
   const handleSave = async () => {
+    console.log("handleSave called. hasContent:", hasContent, "isSaving:", isSaving);
     if (!hasContent || isSaving) return;
     setIsSaving(true);
+    console.log("Saving entry with contentHtml:", contentHtml);
 
     try {
       if (editId) {
         await updateEntry.mutateAsync({
           entryId: editId,
-          contentHtml,
-          mood,
+          contentHtml
         });
+        toast.success("Whisper updated!");
       } else {
         await createEntry.mutateAsync({
           contentHtml,
           mediaFiles: photos,
-          voiceBlob,
-          mood,
-          locationLat,
-          locationLng,
-          locationName,
-          weatherCondition,
-          weatherTemp,
-          voiceTranscript
+          voiceBlob
         });
+        toast.success("Whisper saved!");
       }
       navigate('/', { replace: true });
     } catch (err) {
       console.error('Failed to save entry:', err);
+      toast.error('Failed to save: ' + (err.message || 'Unknown error'));
       if (!navigator.onLine) {
         navigate('/', { replace: true });
       }
@@ -265,18 +224,6 @@ export default function EntryComposer() {
               </button>
             )}
 
-            {/* Location (hidden in edit mode) */}
-            {!editId && (
-              <button
-                type="button"
-                onClick={handleLocate}
-                disabled={isLocating}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl transition-all cursor-pointer active:scale-90 ${locationLat ? 'text-accent-400 bg-accent-400/10' : 'text-white/50 bg-white/5 hover:text-accent-400/90 hover:bg-accent-400/10'}`}
-              >
-                <MapPin className={`w-4 h-4 ${isLocating ? 'animate-pulse' : ''}`} />
-                <span className="text-xs font-medium">{locationName ? 'Located' : 'Location'}</span>
-              </button>
-            )}
           </div>
 
           {/* Right side controls */}
