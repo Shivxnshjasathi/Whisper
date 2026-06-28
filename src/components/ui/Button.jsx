@@ -2,7 +2,7 @@ import { forwardRef } from 'react';
 
 const variants = {
   primary:
-    'bg-gradient-to-r from-rose-500 to-pink-500 text-white shadow-lg shadow-rose-500/25 hover:shadow-rose-500/40 active:scale-[0.97]',
+    'bg-gradient-to-r from-accent-500 to-pink-500 text-white shadow-lg shadow-accent-500/25 hover:shadow-accent-500/40 active:scale-[0.97]',
   secondary:
     'bg-white/10 text-white border border-white/10 hover:bg-white/15 active:scale-[0.97]',
   ghost:

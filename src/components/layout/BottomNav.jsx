@@ -1,10 +1,10 @@
 import { NavLink, useLocation } from 'react-router-dom';
-import { BookOpen, PenLine, Settings } from 'lucide-react';
+import { BookOpen, PenLine, Settings, Calendar } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 const navItems = [
   { to: '/', icon: BookOpen, label: 'Timeline' },
   { to: '/compose', icon: PenLine, label: 'Write' },
-  { to: '/settings', icon: Settings, label: 'Settings' },
 ];
 
 export default function BottomNav() {
@@ -22,29 +22,41 @@ export default function BottomNav() {
               end={to === '/'}
               className={({ isActive }) => `
                 relative flex flex-col items-center gap-0.5 px-6 py-1.5 rounded-2xl transition-all duration-300
-                ${isActive ? 'text-rose-400' : 'text-white/25 active:text-white/40'}
+                ${isActive ? 'text-accent-400' : 'text-white/25 active:text-white/40'}
               `}
             >
               {({ isActive }) => (
                 <>
-                  {/* Active glow backdrop */}
+                  {/* Active glow backdrop sliding animation */}
                   {isActive && (
-                    <div className="absolute inset-0 bg-rose-400/[0.06] rounded-2xl" />
+                    <motion.div
+                      layoutId="bottom-nav-bg"
+                      className="absolute inset-0 bg-accent-400/[0.08] rounded-2xl"
+                      transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                    />
                   )}
 
-                  <div className={`relative transition-transform duration-300 ${isActive ? 'scale-110' : ''}`}>
+                  <motion.div 
+                    animate={{ scale: isActive ? 1.15 : 1, y: isActive ? -2 : 0 }}
+                    transition={{ type: "spring", bounce: 0.5, duration: 0.5 }}
+                    className="relative z-10"
+                  >
                     <Icon
                       className="w-[22px] h-[22px]"
-                      strokeWidth={isActive ? 2.2 : 1.5}
+                      strokeWidth={isActive ? 2.5 : 1.5}
                     />
-                  </div>
-                  <span className={`text-[10px] font-medium tracking-wide ${isActive ? 'text-rose-400' : ''}`}>
+                  </motion.div>
+                  <span className={`text-[10px] font-semibold tracking-wide z-10 transition-colors duration-300 ${isActive ? 'text-accent-400' : ''}`}>
                     {label}
                   </span>
 
                   {/* Active dot indicator */}
                   {isActive && (
-                    <div className="absolute -top-0.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-rose-400 shadow-lg shadow-rose-400/50" />
+                    <motion.div 
+                      layoutId="bottom-nav-dot"
+                      className="absolute -top-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-accent-400 shadow-[0_0_8px_rgba(var(--color-accent-400),0.8)] z-10"
+                      transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                    />
                   )}
                 </>
               )}

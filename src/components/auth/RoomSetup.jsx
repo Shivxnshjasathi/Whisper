@@ -84,7 +84,7 @@ export default function RoomSetup() {
   return (
     <PageTransition className="fixed inset-0 flex flex-col items-center p-6 app-bg overflow-y-auto safe-top safe-bottom">
       <div className="orb w-72 h-72 bg-violet-500/8 top-0 right-0 animate-float" />
-      <div className="orb w-56 h-56 bg-rose-500/8 bottom-0 left-0 animate-float" style={{ animationDelay: '2s' }} />
+      <div className="orb w-56 h-56 bg-accent-500/8 bottom-0 left-0 animate-float" style={{ animationDelay: '2s' }} />
 
       <div className="w-full max-w-sm mx-auto relative z-10 mt-12 flex-1">
         <div className="text-center mb-10">
@@ -103,8 +103,8 @@ export default function RoomSetup() {
               className="w-full group glass-card p-6 text-left hover:bg-white/[0.05] transition-all active:scale-[0.98]"
             >
               <div className="flex items-start gap-4">
-                <div className="w-12 h-12 rounded-2xl bg-rose-500/10 flex items-center justify-center flex-shrink-0 group-hover:bg-rose-500/20 transition-colors">
-                  <Sparkles className="w-6 h-6 text-rose-400" />
+                <div className="w-12 h-12 rounded-2xl bg-accent-500/10 flex items-center justify-center flex-shrink-0 group-hover:bg-accent-500/20 transition-colors">
+                  <Sparkles className="w-6 h-6 text-accent-400" />
                 </div>
                 <div>
                   <h3 className="text-lg font-semibold text-white mb-1">Create a new diary</h3>
@@ -136,14 +136,14 @@ export default function RoomSetup() {
               ← Back
             </button>
             <div className="relative group">
-              <Users className="absolute left-4 top-1/2 -translate-y-1/2 w-[18px] h-[18px] text-white/20 group-focus-within:text-rose-400/60" />
+              <Users className="absolute left-4 top-1/2 -translate-y-1/2 w-[18px] h-[18px] text-white/20 group-focus-within:text-accent-400/60" />
               <input
                 type="text"
                 value={roomName}
                 onChange={(e) => setRoomName(e.target.value)}
                 placeholder="Diary Name (e.g. Our Adventures)"
                 required
-                className="w-full pl-12 pr-4 py-4 rounded-2xl bg-white/[0.04] border border-white/[0.06] text-white placeholder-white/20 text-[15px] focus:outline-none focus:border-rose-400/30 focus:bg-white/[0.06] transition-all"
+                className="w-full pl-12 pr-4 py-4 rounded-2xl bg-white/[0.04] border border-white/[0.06] text-white placeholder-white/20 text-[15px] focus:outline-none focus:border-accent-400/30 focus:bg-white/[0.06] transition-all"
               />
             </div>
             {error && <div className="text-red-400 text-sm p-3 bg-red-500/10 rounded-xl">{error}</div>}

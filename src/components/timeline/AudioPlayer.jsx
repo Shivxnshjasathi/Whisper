@@ -72,7 +72,7 @@ export default function AudioPlayer({ src }) {
       {/* Play/Pause */}
       <button
         onClick={togglePlay}
-        className="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-rose-400 to-pink-500 flex items-center justify-center shadow-lg shadow-rose-500/20 hover:shadow-rose-500/30 active:scale-95 transition-all"
+        className="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-accent-400 to-pink-500 flex items-center justify-center shadow-lg shadow-accent-500/20 hover:shadow-accent-500/30 active:scale-95 transition-all"
       >
         {isPlaying ? (
           <Pause className="w-4 h-4 text-white" fill="white" />
@@ -92,7 +92,7 @@ export default function AudioPlayer({ src }) {
               <div
                 key={i}
                 className={`flex-1 rounded-full transition-colors duration-150 ${
-                  isActive ? 'bg-rose-400' : 'bg-white/10'
+                  isActive ? 'bg-accent-400' : 'bg-white/10'
                 }`}
                 style={{ height: `${height}%` }}
               />

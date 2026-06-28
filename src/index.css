@@ -17,6 +17,10 @@
   --color-rose-400: #f472b6;
   --color-rose-300: #f9a8d4;
 
+  --color-accent-500: var(--accent-500);
+  --color-accent-400: var(--accent-400);
+  --color-accent-300: var(--accent-300);
+
   --color-gold-500: #fbbf24;
   --color-gold-400: #fcd34d;
 
@@ -100,6 +104,13 @@
 * {
   -webkit-tap-highlight-color: transparent;
   -webkit-touch-callout: none;
+}
+
+:root {
+  /* Default theme: Rose */
+  --accent-500: #ec4899;
+  --accent-400: #f472b6;
+  --accent-300: #f9a8d4;
 }
 
 html {

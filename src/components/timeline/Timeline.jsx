@@ -1,16 +1,27 @@
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef, useCallback, useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTimeline, usePendingEntries, useRealtimeEntries, useMemories } from '../../hooks/useEntries';
 import EntryCard from './EntryCard';
 import LoadingSpinner from '../ui/LoadingSpinner';
-import { BookHeart, RefreshCw, PenLine } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { BookHeart, RefreshCw, PenLine, Search, Filter, X } from 'lucide-react';
+import { useNavigate, useOutletContext } from 'react-router-dom';
 import PullToRefresh from '../ui/PullToRefresh';
+import { motion } from 'framer-motion';
 
 export default function Timeline() {
   const { profile } = useAuth();
   const navigate = useNavigate();
   const roomId = profile?.roomId;
+  
+  const [filterMood, setFilterMood] = useState('all');
+  
+  // From AppShell context
+  const { isSearchExpanded, setIsSearchExpanded, searchTerm, setSearchTerm } = useOutletContext() || { 
+    isSearchExpanded: false, 
+    setIsSearchExpanded: () => {},
+    searchTerm: '',
+    setSearchTerm: () => {}
+  };
 
   const {
     data,
@@ -53,14 +64,32 @@ export default function Timeline() {
   }, [refetch]);
 
   const allEntries = data?.pages?.flat() || [];
-  const groupedEntries = groupByDate([...pendingEntries, ...allEntries]);
+  
+  // Apply filters
+  const filteredEntries = [...pendingEntries, ...allEntries].filter(entry => {
+    let matches = true;
+    if (searchTerm) {
+      const lowerTerm = searchTerm.toLowerCase();
+      const contentStr = (entry.content_html || '').toLowerCase();
+      const transcriptStr = (entry.voice_transcript || '').toLowerCase();
+      if (!contentStr.includes(lowerTerm) && !transcriptStr.includes(lowerTerm)) {
+        matches = false;
+      }
+    }
+    if (filterMood !== 'all') {
+      if (entry.mood !== filterMood) matches = false;
+    }
+    return matches;
+  });
+
+  const groupedEntries = groupByDate(filteredEntries);
 
   if (isLoading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[70vh] gap-5 animate-fade-in">
         <div className="relative">
-          <div className="w-16 h-16 rounded-3xl bg-gradient-to-br from-rose-400/20 to-violet-500/20 flex items-center justify-center">
-            <BookHeart className="w-7 h-7 text-rose-400/50 animate-pulse-soft" />
+          <div className="w-16 h-16 rounded-3xl bg-gradient-to-br from-accent-400/20 to-violet-500/20 flex items-center justify-center">
+            <BookHeart className="w-7 h-7 text-accent-400/50 animate-pulse-soft" />
           </div>
         </div>
         <div className="text-center">
@@ -82,7 +111,7 @@ export default function Timeline() {
         </p>
         <button
           onClick={handleRefresh}
-          className="text-sm text-rose-400/70 hover:text-rose-400 transition-colors flex items-center gap-2 px-4 py-2 rounded-xl bg-rose-400/5"
+          className="text-sm text-accent-400/70 hover:text-accent-400 transition-colors flex items-center gap-2 px-4 py-2 rounded-xl bg-accent-400/5"
         >
           <RefreshCw className="w-3.5 h-3.5" /> Retry
         </button>
@@ -95,8 +124,8 @@ export default function Timeline() {
       <div className="flex flex-col items-center justify-center min-h-[70vh] gap-6 px-8 animate-fade-in">
         {/* Decorative */}
         <div className="relative">
-          <div className="w-24 h-24 rounded-[2rem] bg-gradient-to-br from-rose-400/10 to-violet-500/10 flex items-center justify-center border border-white/[0.04]">
-            <BookHeart className="w-10 h-10 text-rose-400/40" />
+          <div className="w-24 h-24 rounded-[2rem] bg-gradient-to-br from-accent-400/10 to-violet-500/10 flex items-center justify-center border border-white/[0.04]">
+            <BookHeart className="w-10 h-10 text-accent-400/40" />
           </div>
           <div className="absolute -bottom-1 -right-1 w-8 h-8 rounded-xl bg-gradient-to-br from-gold-400/20 to-gold-500/20 flex items-center justify-center border border-white/[0.04] animate-float">
             <span className="text-sm">✨</span>
@@ -114,7 +143,7 @@ export default function Timeline() {
 
         <button
           onClick={() => navigate('/compose')}
-          className="flex items-center gap-2 px-6 py-3 rounded-2xl bg-gradient-to-r from-rose-500 to-pink-500 text-white text-sm font-semibold shadow-lg shadow-rose-500/25 active:scale-95 transition-transform"
+          className="flex items-center gap-2 px-6 py-3 rounded-2xl bg-gradient-to-r from-accent-500 to-pink-500 text-white text-sm font-semibold shadow-lg shadow-accent-500/25 active:scale-95 transition-transform"
         >
           <PenLine className="w-4 h-4" />
           Write First Entry
@@ -126,6 +155,33 @@ export default function Timeline() {
   return (
     <PullToRefresh onRefresh={handleRefresh} isRefetching={isRefetching}>
       <div className="px-4 py-6 md:py-8 max-w-[1400px] mx-auto w-full">
+
+      {/* Mood Filter Toggle */}
+      {isSearchExpanded && (
+        <div className="mb-6 max-w-2xl mx-auto flex justify-end animate-fade-in">
+          <div className="relative w-40">
+            <select
+              value={filterMood}
+              onChange={(e) => setFilterMood(e.target.value)}
+              className="appearance-none block w-full pl-3 pr-8 py-2 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:ring-1 focus:ring-accent-400 focus:border-accent-400 text-sm transition-all cursor-pointer"
+            >
+              <option value="all">All Moods</option>
+              <option value="happy">Happy</option>
+              <option value="love">Love</option>
+              <option value="excited">Excited</option>
+              <option value="peaceful">Peaceful</option>
+              <option value="grateful">Grateful</option>
+              <option value="thoughtful">Thinking</option>
+              <option value="silly">Silly</option>
+              <option value="sad">Sad</option>
+              <option value="tired">Tired</option>
+            </select>
+            <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
+              <Filter className="h-3.5 w-3.5 text-white/30" />
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Memories */}
       {memories.length > 0 && (
@@ -193,13 +249,19 @@ export default function Timeline() {
               {/* Right Entries Column */}
               <div className="flex-1 flex flex-col gap-4 md:gap-5 min-w-0">
                 {group.entries.map((entry, i) => (
-                  <div
+                  <motion.div
                     key={entry.id}
-                    className="animate-slide-up"
-                    style={{ animationDelay: `${i * 60}ms`, animationFillMode: 'both' }}
+                    initial={{ opacity: 0, y: 40, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    transition={{ 
+                      type: "spring", 
+                      stiffness: 400, 
+                      damping: 30, 
+                      delay: Math.min(i * 0.1, 1) 
+                    }}
                   >
                     <EntryCard entry={entry} />
-                  </div>
+                  </motion.div>
                 ))}
               </div>
             </div>

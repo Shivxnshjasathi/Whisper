@@ -75,8 +75,9 @@ export function AuthProvider({ children }) {
         .single();
 
       return newProfile;
-    } catch {
-      // If profiles table doesn't exist yet, return a fallback
+    } catch (err) {
+      // If profiles table doesn't exist yet or network fails, return a fallback
+      console.warn('Could not fetch or create profile:', err);
       return {
         display_name: authUser.email?.split('@')[0] || 'User',
         avatar_color: 'rose',

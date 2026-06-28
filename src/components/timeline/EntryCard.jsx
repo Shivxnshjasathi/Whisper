@@ -2,8 +2,8 @@ import Avatar from '../ui/Avatar';
 import ImageGrid from './ImageGrid';
 import AudioPlayer from './AudioPlayer';
 import Reactions from './Reactions';
-import { CloudOff, MoreHorizontal, Edit2, Trash2 } from 'lucide-react';
-import { useState, useRef, useEffect } from 'react';
+import { CloudOff, MoreHorizontal, Edit2, Trash2, MapPin, CloudSun, Quote, Volume2, VolumeX, MessageCircle } from 'lucide-react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useDeleteEntry } from '../../hooks/useEntries';
 import { useNavigate } from 'react-router-dom';
@@ -16,6 +16,10 @@ export default function EntryCard({ entry, isDetailView = false }) {
     media_urls = [],
     voice_note_url,
     mood,
+    location_name,
+    weather_temp,
+    weather_condition,
+    voice_transcript,
     created_at,
     isPending,
     author_id,
@@ -25,6 +29,7 @@ export default function EntryCard({ entry, isDetailView = false }) {
   const navigate = useNavigate();
   const deleteMutation = useDeleteEntry();
   const [showMenu, setShowMenu] = useState(false);
+  const [isPlayingTTS, setIsPlayingTTS] = useState(false);
   const menuRef = useRef(null);
   
   const isAuthor = user?.id === author_id && !isPending;
@@ -54,10 +59,33 @@ export default function EntryCard({ entry, isDetailView = false }) {
     }
   };
 
+  const handleTTS = useCallback((e) => {
+    e.stopPropagation();
+    if (isPlayingTTS) {
+      window.speechSynthesis.cancel();
+      setIsPlayingTTS(false);
+    } else {
+      const plainText = (content_html || '').replace(/<[^>]*>?/gm, '');
+      if (!plainText.trim()) return;
+      
+      const utterance = new SpeechSynthesisUtterance(plainText);
+      utterance.onend = () => setIsPlayingTTS(false);
+      utterance.onerror = () => setIsPlayingTTS(false);
+      window.speechSynthesis.speak(utterance);
+      setIsPlayingTTS(true);
+    }
+  }, [content_html, isPlayingTTS]);
+
+  useEffect(() => {
+    return () => {
+      window.speechSynthesis.cancel();
+    };
+  }, []);
+
   const getMoodStyles = (mood) => {
     switch (mood) {
       case 'happy': return 'bg-emerald-500/10 border-emerald-500/20 text-emerald-100';
-      case 'love': return 'bg-rose-500/10 border-rose-500/20 text-rose-100';
+      case 'love': return 'bg-accent-500/10 border-accent-500/20 text-accent-100';
       case 'excited': return 'bg-amber-500/10 border-amber-500/20 text-amber-100';
       case 'peaceful': return 'bg-cyan-500/10 border-cyan-500/20 text-cyan-100';
       case 'grateful': return 'bg-teal-500/10 border-teal-500/20 text-teal-100';
@@ -111,8 +139,24 @@ export default function EntryCard({ entry, isDetailView = false }) {
             )}
           </div>
 
-          {/* Action Menu */}
-          {isAuthor && (
+          <div className="flex items-center gap-1">
+            {/* TTS Button */}
+            {content_html && (
+              <button 
+                onClick={handleTTS}
+                className="w-8 h-8 rounded-full flex items-center justify-center bg-white/0 hover:bg-white/5 active:bg-white/10 transition-colors"
+                title={isPlayingTTS ? "Stop reading" : "Read aloud"}
+              >
+                {isPlayingTTS ? (
+                  <VolumeX className="w-4 h-4 text-accent-400" />
+                ) : (
+                  <Volume2 className="w-4 h-4 text-white/40 hover:text-white/70" />
+                )}
+              </button>
+            )}
+
+            {/* Action Menu */}
+            {isAuthor && (
             <div className="relative" ref={menuRef}>
               <button 
                 onClick={() => setShowMenu(!showMenu)}
@@ -128,7 +172,7 @@ export default function EntryCard({ entry, isDetailView = false }) {
                     animate={{ opacity: 1, scale: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.95, y: -10 }}
                     transition={{ duration: 0.15 }}
-                    className="absolute right-0 top-full mt-2 w-40 glass-card p-1.5 z-20 shadow-xl border border-white/10 origin-top-right"
+                    className="absolute right-0 top-full mt-2 w-40 bg-slate-900 p-1.5 z-20 shadow-xl border border-white/10 origin-top-right rounded-2xl"
                   >
                     <button 
                       onClick={handleEdit}
@@ -139,9 +183,9 @@ export default function EntryCard({ entry, isDetailView = false }) {
                     </button>
                     <button 
                       onClick={handleDelete}
-                      className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-[13px] font-medium text-white/70 hover:bg-rose-500/10 hover:text-rose-400 transition-colors"
+                      className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-[13px] font-medium text-white/70 hover:bg-accent-500/10 hover:text-accent-400 transition-colors"
                     >
-                      <Trash2 className="w-4 h-4 text-rose-400" />
+                      <Trash2 className="w-4 h-4 text-accent-400" />
                       Delete
                     </button>
                   </motion.div>
@@ -149,6 +193,7 @@ export default function EntryCard({ entry, isDetailView = false }) {
               </AnimatePresence>
             </div>
           )}
+          </div>
         </div>
 
         {/* Content */}
@@ -173,13 +218,52 @@ export default function EntryCard({ entry, isDetailView = false }) {
         {voice_note_url && (
           <div className="mt-3">
             <AudioPlayer src={voice_note_url} />
+            {voice_transcript && (
+              <div className="mt-2 p-3 bg-white/5 rounded-xl border border-white/5 flex items-start gap-2">
+                <Quote className="w-3.5 h-3.5 text-white/30 flex-shrink-0 mt-0.5" />
+                <p className="text-xs text-white/60 italic leading-relaxed">{voice_transcript}</p>
+              </div>
+            )}
           </div>
         )}
 
-        {/* Reactions (Only show if not pending and not offline) */}
-        {!isPending && (
-          <Reactions entryId={id} />
-        )}
+        {/* Footer: Location, Weather, Reactions */}
+        <div className="mt-4 pt-3 border-t border-white/5 flex flex-wrap items-center justify-between gap-3">
+          {/* Location & Weather */}
+          <div className="flex flex-wrap items-center gap-3">
+            {location_name && (
+              <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-white/[0.03] text-white/40">
+                <MapPin className="w-3 h-3" />
+                <span className="text-[10px] uppercase tracking-wider">{location_name.split(',')[0]}</span>
+              </div>
+            )}
+            {weather_condition && weather_temp && (
+              <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-white/[0.03] text-white/40">
+                <CloudSun className="w-3 h-3" />
+                <span className="text-[10px] uppercase tracking-wider">{Math.round(weather_temp)}°</span>
+              </div>
+            )}
+          </div>
+
+          {/* Reactions & Comments */}
+          {!isPending && (
+            <div className="flex items-center justify-end flex-1 gap-1">
+              <Reactions entryId={id} />
+              
+              {!isDetailView && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    navigate(`/entry/${id}`, { state: { entry } });
+                  }}
+                  className="w-7 h-7 rounded-full flex items-center justify-center bg-white/5 text-white/50 hover:bg-white/10 hover:text-white/80 transition-colors ml-1"
+                >
+                  <MessageCircle className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+          )}
+        </div>
       </div>
     </article>
   );

@@ -54,14 +54,14 @@ export default function LoginScreen() {
   if (magicLinkSent) {
     return (
       <div className="fixed inset-0 flex items-center justify-center p-6 app-bg">
-        <div className="orb w-64 h-64 bg-rose-500/10 top-10 -left-20 animate-float" />
+        <div className="orb w-64 h-64 bg-accent-500/10 top-10 -left-20 animate-float" />
         <div className="animate-scale-in text-center max-w-sm mx-auto relative z-10">
-          <div className="w-24 h-24 mx-auto mb-8 rounded-3xl bg-gradient-to-br from-rose-400 to-pink-500 flex items-center justify-center shadow-2xl shadow-rose-500/30 rotate-6">
+          <div className="w-24 h-24 mx-auto mb-8 rounded-3xl bg-gradient-to-br from-accent-400 to-pink-500 flex items-center justify-center shadow-2xl shadow-accent-500/30 rotate-6">
             <Mail className="w-10 h-10 text-white -rotate-6" />
           </div>
           <h2 className="text-3xl font-display font-semibold text-white mb-3">Check your inbox</h2>
           <p className="text-white/50 leading-relaxed mb-8 text-[15px]">
-            We sent a magic link to <span className="text-rose-400 font-medium">{email}</span>.
+            We sent a magic link to <span className="text-accent-400 font-medium">{email}</span>.
             <br />Tap it to sign in.
           </p>
           <button onClick={() => setMagicLinkSent(false)} className="text-sm text-white/30 hover:text-white/50 transition-colors underline underline-offset-4">
@@ -87,7 +87,7 @@ export default function LoginScreen() {
           </p>
           <button
             onClick={() => { setSignUpSuccess(false); setMode('password'); }}
-            className="text-sm text-rose-400/70 hover:text-rose-400 transition-colors font-medium"
+            className="text-sm text-accent-400/70 hover:text-accent-400 transition-colors font-medium"
           >
             Back to sign in
           </button>
@@ -100,14 +100,14 @@ export default function LoginScreen() {
     <div className="fixed inset-0 flex flex-col items-center justify-center p-8 app-bg overflow-auto safe-top safe-bottom">
       {/* Decorative orbs */}
       <div className="orb w-72 h-72 bg-violet-500/8 top-0 left-0 animate-float" />
-      <div className="orb w-56 h-56 bg-rose-500/6 bottom-0 right-0 animate-float" style={{ animationDelay: '3s' }} />
+      <div className="orb w-56 h-56 bg-accent-500/6 bottom-0 right-0 animate-float" style={{ animationDelay: '3s' }} />
       <div className="orb w-32 h-32 bg-gold-500/5 top-1/3 right-0 animate-float" style={{ animationDelay: '1.5s' }} />
 
       <div className="relative w-full max-w-[340px] mx-auto animate-fade-in z-10">
         {/* Logo */}
         <div className="text-center mb-10">
           <div className="relative inline-block mb-5">
-            <div className="w-20 h-20 rounded-[1.75rem] bg-gradient-to-br from-rose-400 via-pink-500 to-violet-500 flex items-center justify-center shadow-2xl shadow-rose-500/25 rotate-3">
+            <div className="w-20 h-20 rounded-[1.75rem] bg-gradient-to-br from-accent-400 via-pink-500 to-violet-500 flex items-center justify-center shadow-2xl shadow-accent-500/25 rotate-3">
               <Heart className="w-9 h-9 text-white -rotate-3" fill="white" />
             </div>
             <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-gradient-to-br from-gold-400 to-gold-500 flex items-center justify-center shadow-lg animate-pulse-soft">
@@ -127,7 +127,7 @@ export default function LoginScreen() {
           {/* Display name (signup only) */}
           {mode === 'signup' && (
             <div className="relative group animate-slide-down">
-              <User className="absolute left-4 top-1/2 -translate-y-1/2 w-[18px] h-[18px] text-white/20 group-focus-within:text-rose-400/60 transition-colors" />
+              <User className="absolute left-4 top-1/2 -translate-y-1/2 w-[18px] h-[18px] text-white/20 group-focus-within:text-accent-400/60 transition-colors" />
               <input
                 type="text"
                 value={displayName}
@@ -135,14 +135,14 @@ export default function LoginScreen() {
                 placeholder="Your name"
                 required
                 autoComplete="name"
-                className="w-full pl-12 pr-4 py-4 rounded-2xl bg-white/[0.04] border border-white/[0.06] text-white placeholder-white/20 text-[15px] focus:outline-none focus:border-rose-400/30 focus:bg-white/[0.06] transition-all duration-300"
+                className="w-full pl-12 pr-4 py-4 rounded-2xl bg-white/[0.04] border border-white/[0.06] text-white placeholder-white/20 text-[15px] focus:outline-none focus:border-accent-400/30 focus:bg-white/[0.06] transition-all duration-300"
               />
             </div>
           )}
 
           {/* Email */}
           <div className="relative group">
-            <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-[18px] h-[18px] text-white/20 group-focus-within:text-rose-400/60 transition-colors" />
+            <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-[18px] h-[18px] text-white/20 group-focus-within:text-accent-400/60 transition-colors" />
             <input
               type="email"
               value={email}
@@ -150,14 +150,14 @@ export default function LoginScreen() {
               placeholder="Email"
               required
               autoComplete="email"
-              className="w-full pl-12 pr-4 py-4 rounded-2xl bg-white/[0.04] border border-white/[0.06] text-white placeholder-white/20 text-[15px] focus:outline-none focus:border-rose-400/30 focus:bg-white/[0.06] transition-all duration-300"
+              className="w-full pl-12 pr-4 py-4 rounded-2xl bg-white/[0.04] border border-white/[0.06] text-white placeholder-white/20 text-[15px] focus:outline-none focus:border-accent-400/30 focus:bg-white/[0.06] transition-all duration-300"
             />
           </div>
 
           {/* Password */}
           {mode !== 'magic' && (
             <div className="relative group animate-slide-down">
-              <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-[18px] h-[18px] text-white/20 group-focus-within:text-rose-400/60 transition-colors" />
+              <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-[18px] h-[18px] text-white/20 group-focus-within:text-accent-400/60 transition-colors" />
               <input
                 type={showPassword ? 'text' : 'password'}
                 value={password}
@@ -166,7 +166,7 @@ export default function LoginScreen() {
                 required
                 minLength={6}
                 autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
-                className="w-full pl-12 pr-12 py-4 rounded-2xl bg-white/[0.04] border border-white/[0.06] text-white placeholder-white/20 text-[15px] focus:outline-none focus:border-rose-400/30 focus:bg-white/[0.06] transition-all duration-300"
+                className="w-full pl-12 pr-12 py-4 rounded-2xl bg-white/[0.04] border border-white/[0.06] text-white placeholder-white/20 text-[15px] focus:outline-none focus:border-accent-400/30 focus:bg-white/[0.06] transition-all duration-300"
               />
               <button
                 type="button"
@@ -204,7 +204,7 @@ export default function LoginScreen() {
             </button>
           ) : mode === 'password' ? (
             <>
-              <button onClick={() => setMode('signup')} className="text-[13px] text-rose-400/50 hover:text-rose-400/80 transition-colors font-medium">
+              <button onClick={() => setMode('signup')} className="text-[13px] text-accent-400/50 hover:text-accent-400/80 transition-colors font-medium">
                 Don't have an account? Sign up
               </button>
               <button onClick={() => setMode('magic')} className="text-[13px] text-white/20 hover:text-white/40 transition-colors">

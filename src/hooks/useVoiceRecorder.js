@@ -8,9 +8,11 @@ export function useVoiceRecorder() {
   const [duration, setDuration] = useState(0);
   const [audioBlob, setAudioBlob] = useState(null);
   const [audioUrl, setAudioUrl] = useState(null);
+  const [transcript, setTranscript] = useState('');
   const [error, setError] = useState(null);
 
   const mediaRecorderRef = useRef(null);
+  const recognitionRef = useRef(null);
   const chunksRef = useRef([]);
   const timerRef = useRef(null);
   const streamRef = useRef(null);
@@ -20,6 +22,7 @@ export function useVoiceRecorder() {
       setError(null);
       setAudioBlob(null);
       setAudioUrl(null);
+      setTranscript('');
       setDuration(0);
 
       const stream = await navigator.mediaDevices.getUserMedia({
@@ -62,6 +65,31 @@ export function useVoiceRecorder() {
       mediaRecorder.start(100); // Collect data every 100ms
       setIsRecording(true);
 
+      // Initialize Speech Recognition if supported
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (SpeechRecognition) {
+        const recognition = new SpeechRecognition();
+        recognition.continuous = true;
+        recognition.interimResults = true;
+        
+        recognition.onresult = (event) => {
+          let currentTranscript = '';
+          for (let i = event.resultIndex; i < event.results.length; ++i) {
+            currentTranscript += event.results[i][0].transcript;
+          }
+          setTranscript((prev) => prev + (prev && currentTranscript ? ' ' : '') + currentTranscript);
+        };
+        
+        recognition.onerror = (e) => console.log('Speech recognition error:', e.error);
+        
+        try {
+          recognition.start();
+          recognitionRef.current = recognition;
+        } catch(e) {
+          console.log('Could not start speech recognition', e);
+        }
+      }
+
       // Start duration timer
       const startTime = Date.now();
       timerRef.current = setInterval(() => {
@@ -79,6 +107,10 @@ export function useVoiceRecorder() {
   const stopRecording = useCallback(() => {
     if (mediaRecorderRef.current && isRecording) {
       mediaRecorderRef.current.stop();
+      if (recognitionRef.current) {
+        recognitionRef.current.stop();
+        recognitionRef.current = null;
+      }
       setIsRecording(false);
       clearInterval(timerRef.current);
       timerRef.current = null;
@@ -88,6 +120,10 @@ export function useVoiceRecorder() {
   const cancelRecording = useCallback(() => {
     if (mediaRecorderRef.current && isRecording) {
       mediaRecorderRef.current.stop();
+      if (recognitionRef.current) {
+        recognitionRef.current.stop();
+        recognitionRef.current = null;
+      }
       setIsRecording(false);
       clearInterval(timerRef.current);
       timerRef.current = null;
@@ -106,6 +142,7 @@ export function useVoiceRecorder() {
       URL.revokeObjectURL(audioUrl);
     }
     setAudioUrl(null);
+    setTranscript('');
     setDuration(0);
   }, [isRecording, audioUrl]);
 
@@ -115,6 +152,7 @@ export function useVoiceRecorder() {
       URL.revokeObjectURL(audioUrl);
     }
     setAudioUrl(null);
+    setTranscript('');
     setDuration(0);
   }, [audioUrl]);
 
@@ -130,6 +168,7 @@ export function useVoiceRecorder() {
     formattedDuration: formatDuration(duration),
     audioBlob,
     audioUrl,
+    transcript,
     error,
     startRecording,
     stopRecording,

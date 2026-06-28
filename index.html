@@ -26,7 +26,50 @@
     <meta name="msapplication-TileColor" content="#08010f" />
   </head>
   <body class="bg-[#08010f] text-white antialiased">
-    <div id="root"></div>
+    <div id="root">
+      <!-- Native-like App Splash Screen -->
+      <style>
+        #app-splash {
+          position: fixed;
+          top: 0; left: 0; right: 0; bottom: 0;
+          background: radial-gradient(circle at top right, #1f0d2c 0%, #08010f 60%);
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          z-index: 99999;
+        }
+        .splash-logo {
+          font-family: 'Playfair Display', serif;
+          font-size: 48px;
+          font-weight: 600;
+          background: linear-gradient(to right, #ffffff, rgba(255, 255, 255, 0.6));
+          -webkit-background-clip: text;
+          color: transparent;
+          margin-bottom: 30px;
+          animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        .splash-spinner {
+          width: 32px;
+          height: 32px;
+          border: 3px solid rgba(255, 255, 255, 0.05);
+          border-top-color: #fb7185;
+          border-radius: 50%;
+          animation: spin 1s linear infinite;
+        }
+        @keyframes pulse {
+          0%, 100% { opacity: 1; transform: scale(1); }
+          50% { opacity: 0.8; transform: scale(0.97); }
+        }
+        @keyframes spin {
+          to { transform: rotate(360deg); }
+        }
+      </style>
+      <div id="app-splash">
+        <h1 class="splash-logo">Whisper</h1>
+        <div class="splash-spinner"></div>
+      </div>
+    </div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Send, ArrowLeft, Sparkles, X, ImagePlus, Mic, Check, Palette } from 'lucide-react';
+import { Send, ArrowLeft, Sparkles, X, ImagePlus, Mic, Check, Palette, MapPin } from 'lucide-react';
 import { useCreateEntry, useUpdateEntry } from '../../hooks/useEntries';
 import { supabase } from '../../lib/supabase';
 import RichTextEditor from './RichTextEditor';
@@ -25,14 +25,23 @@ export default function EntryComposer() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const editId = searchParams.get('edit');
-  
+
   const createEntry = useCreateEntry();
   const updateEntry = useUpdateEntry();
 
   const [contentHtml, setContentHtml] = useState('');
   const [photos, setPhotos] = useState([]);
   const [voiceBlob, setVoiceBlob] = useState(null);
+  const [voiceTranscript, setVoiceTranscript] = useState('');
   const [mood, setMood] = useState(null);
+
+  const [locationLat, setLocationLat] = useState(null);
+  const [locationLng, setLocationLng] = useState(null);
+  const [locationName, setLocationName] = useState(null);
+  const [weatherCondition, setWeatherCondition] = useState(null);
+  const [weatherTemp, setWeatherTemp] = useState(null);
+  const [isLocating, setIsLocating] = useState(false);
+
   const [isSaving, setIsSaving] = useState(false);
   const [isFetchingEdit, setIsFetchingEdit] = useState(!!editId);
   const [showDoodle, setShowDoodle] = useState(false);
@@ -61,13 +70,48 @@ export default function EntryComposer() {
     setPhotos((prev) => prev.filter((_, i) => i !== index));
   }, []);
 
-  const handleVoiceRecorded = useCallback((blob) => {
+  const handleVoiceRecorded = useCallback((blob, url, transcript) => {
     setVoiceBlob(blob);
+    if (transcript) setVoiceTranscript(transcript);
   }, []);
 
   const handleClearVoice = useCallback(() => {
     setVoiceBlob(null);
+    setVoiceTranscript('');
   }, []);
+
+  const handleLocate = async () => {
+    if (!navigator.geolocation) {
+      alert('Geolocation is not supported by your browser');
+      return;
+    }
+
+    setIsLocating(true);
+    navigator.geolocation.getCurrentPosition(async (position) => {
+      const lat = position.coords.latitude;
+      const lng = position.coords.longitude;
+      setLocationLat(lat);
+      setLocationLng(lng);
+      setLocationName(`${lat.toFixed(2)}, ${lng.toFixed(2)}`); // Simplified
+
+      try {
+        const weatherRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&current_weather=true`);
+        const weatherData = await weatherRes.json();
+        if (weatherData && weatherData.current_weather) {
+          setWeatherTemp(weatherData.current_weather.temperature);
+          setWeatherCondition(weatherData.current_weather.weathercode.toString()); // Could map to string
+        }
+      } catch (err) {
+        console.error("Failed to fetch weather", err);
+      }
+
+      setIsLocating(false);
+    }, (error) => {
+      console.error(error);
+      alert('Unable to retrieve your location');
+      setIsLocating(false);
+    });
+  };
 
   const handleSave = async () => {
     if (!hasContent || isSaving) return;
@@ -86,6 +130,12 @@ export default function EntryComposer() {
           mediaFiles: photos,
           voiceBlob,
           mood,
+          locationLat,
+          locationLng,
+          locationName,
+          weatherCondition,
+          weatherTemp,
+          voiceTranscript
         });
       }
       navigate('/', { replace: true });
@@ -100,11 +150,11 @@ export default function EntryComposer() {
   };
 
   if (isFetchingEdit) {
-    return <div className="flex-1 flex items-center justify-center p-8"><div className="w-6 h-6 border-2 border-white/10 border-t-rose-400 rounded-full animate-spin" /></div>;
+    return <div className="flex-1 flex items-center justify-center p-8"><div className="w-6 h-6 border-2 border-white/10 border-t-accent-400 rounded-full animate-spin" /></div>;
   }
 
   return (
-    <div className="flex flex-col min-h-[100dvh] md:min-h-0 animate-fade-in w-full max-w-3xl mx-auto md:my-6 md:bg-plum-950/40 md:backdrop-blur-xl md:border md:border-white/[0.04] md:rounded-3xl md:shadow-2xl overflow-hidden">
+    <div className="flex flex-col h-full animate-fade-in w-full max-w-3xl mx-auto md:my-6 md:h-[calc(100vh-3rem)] md:bg-plum-950/40 md:backdrop-blur-xl md:border md:border-white/[0.04] md:rounded-3xl md:shadow-2xl overflow-hidden">
 
       {/* Mood picker */}
       <div className="px-4 py-3 border-b border-white/[0.03]">
@@ -120,7 +170,7 @@ export default function EntryComposer() {
               className={`
                 flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[12px] transition-all duration-200
                 ${mood === m.value
-                  ? 'bg-rose-500/15 border border-rose-500/20 text-rose-300 scale-105 shadow-lg shadow-rose-500/10'
+                  ? 'bg-accent-500/15 border border-accent-500/20 text-accent-300 scale-105 shadow-lg shadow-accent-500/10'
                   : 'bg-white/[0.03] border border-white/[0.04] text-white/30 hover:bg-white/[0.06] active:scale-95'
                 }
               `}
@@ -133,7 +183,7 @@ export default function EntryComposer() {
       </div>
 
       {/* Editor area */}
-      <div className="flex-1 px-5 py-5">
+      <div className="flex-1 px-5 py-5 overflow-y-auto custom-scrollbar">
         <RichTextEditor
           value={contentHtml}
           onChange={setContentHtml}
@@ -175,12 +225,12 @@ export default function EntryComposer() {
       )}
 
       {/* Bottom toolbar */}
-      <div className="border-t border-white/[0.04] px-4 pt-3 pb-[calc(12px+68px+env(safe-area-inset-bottom))] md:pb-3 md:safe-bottom">
+      <div className="border-t border-white/[0.04] bg-plum-950/40 md:bg-transparent px-4 pt-3 pb-[calc(12px+68px+env(safe-area-inset-bottom))] md:pb-3 md:safe-bottom shrink-0">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-1">
             {/* Add photo (hidden in edit mode) */}
             {!editId && (
-              <label className="w-10 h-10 rounded-xl flex items-center justify-center text-white/25 hover:text-rose-400/70 hover:bg-rose-400/5 transition-all cursor-pointer active:scale-90">
+              <label className="w-10 h-10 rounded-xl flex items-center justify-center text-white/25 hover:text-accent-400/70 hover:bg-accent-400/5 transition-all cursor-pointer active:scale-90">
                 <ImagePlus className="w-5 h-5" />
                 <input
                   type="file"
@@ -208,37 +258,51 @@ export default function EntryComposer() {
               <button
                 type="button"
                 onClick={() => setShowDoodle(true)}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-white/50 bg-white/5 hover:text-rose-400/90 hover:bg-rose-400/10 transition-all cursor-pointer active:scale-90"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-white/50 bg-white/5 hover:text-accent-400/90 hover:bg-accent-400/10 transition-all cursor-pointer active:scale-90"
               >
                 <Palette className="w-4 h-4" />
                 <span className="text-xs font-medium">Doodle</span>
               </button>
             )}
+
+            {/* Location (hidden in edit mode) */}
+            {!editId && (
+              <button
+                type="button"
+                onClick={handleLocate}
+                disabled={isLocating}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl transition-all cursor-pointer active:scale-90 ${locationLat ? 'text-accent-400 bg-accent-400/10' : 'text-white/50 bg-white/5 hover:text-accent-400/90 hover:bg-accent-400/10'}`}
+              >
+                <MapPin className={`w-4 h-4 ${isLocating ? 'animate-pulse' : ''}`} />
+                <span className="text-xs font-medium">{locationName ? 'Located' : 'Location'}</span>
+              </button>
+            )}
           </div>
 
-          {/* Offline notice */}
-          {!navigator.onLine && (
-            <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/8 border border-amber-500/10">
-              <div className="w-1.5 h-1.5 rounded-full bg-amber-400/60" />
-              <span className="text-[10px] font-medium text-amber-400/60 uppercase tracking-wider">Offline</span>
-            </div>
-          )}
+          {/* Right side controls */}
+          <div className="flex items-center gap-3">
+            {!navigator.onLine && (
+              <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/8 border border-amber-500/10">
+                <div className="w-1.5 h-1.5 rounded-full bg-amber-400/60" />
+                <span className="text-[10px] font-medium text-amber-400/60 uppercase tracking-wider">Offline</span>
+              </div>
+            )}
+
+            <Button
+              size="sm"
+              disabled={!hasContent}
+              loading={isSaving}
+              onClick={handleSave}
+              className="!rounded-xl shadow-lg shadow-accent-500/20 active:scale-95"
+            >
+              {editId ? <Check className="w-4 h-4" /> : <Send className="w-4 h-4" />}
+              {editId ? 'Save' : (!navigator.onLine ? 'Queue' : 'Share')}
+            </Button>
+          </div>
         </div>
       </div>
 
-      {/* Floating Action Button */}
-      <div className="fixed right-5 bottom-[calc(90px+env(safe-area-inset-bottom))] z-50 md:bottom-10 md:right-10">
-        <Button
-          size="lg"
-          disabled={!hasContent}
-          loading={isSaving}
-          onClick={handleSave}
-          className="!rounded-2xl !px-6 shadow-xl shadow-rose-500/25 transition-transform hover:scale-105 active:scale-95"
-        >
-          {editId ? <Check className="w-4 h-4" /> : <Send className="w-4 h-4" />}
-          {editId ? 'Save' : (!navigator.onLine ? 'Queue' : 'Share')}
-        </Button>
-      </div>
+
     </div>
   );
 }
@@ -250,8 +314,8 @@ function VoiceRecorderButton({ onRecorded }) {
     return (
       <div className="flex-1 ml-2 animate-scale-in">
         <VoiceRecorder
-          onRecorded={(blob) => {
-            onRecorded(blob);
+          onRecorded={(blob, url, transcript) => {
+            onRecorded(blob, url, transcript);
             setShowRecorder(false);
           }}
           onClear={() => setShowRecorder(false)}
@@ -264,7 +328,7 @@ function VoiceRecorderButton({ onRecorded }) {
     <button
       type="button"
       onClick={() => setShowRecorder(true)}
-      className="w-10 h-10 rounded-xl flex items-center justify-center text-white/25 hover:text-rose-400/70 hover:bg-rose-400/5 transition-all active:scale-90"
+      className="w-10 h-10 rounded-xl flex items-center justify-center text-white/25 hover:text-accent-400/70 hover:bg-accent-400/5 transition-all active:scale-90"
     >
       <Mic className="w-5 h-5" />
     </button>

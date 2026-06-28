@@ -38,7 +38,7 @@ export default function Reactions({ entryId }) {
   };
 
   return (
-    <div className="flex flex-wrap items-center gap-2 mt-3 pt-3 border-t border-white/5 relative">
+    <div className="flex flex-wrap items-center justify-end gap-2 relative">
       {Object.entries(grouped).map(([emoji, reacts]) => {
         const hasReacted = reacts.some(r => r.user_id === user.id);
         return (
@@ -46,7 +46,7 @@ export default function Reactions({ entryId }) {
             key={emoji}
             onClick={() => handleToggle(emoji)}
             className={`flex items-center gap-1.5 px-2 py-1 rounded-full text-xs transition-all ${
-              hasReacted ? 'bg-rose-500/20 text-rose-300 border border-rose-500/20' : 'bg-white/5 text-white/60 hover:bg-white/10'
+              hasReacted ? 'bg-accent-500/20 text-accent-300 border border-accent-500/20' : 'bg-white/5 text-white/60 hover:bg-white/10'
             }`}
           >
             <span>{emoji}</span>

@@ -11,7 +11,7 @@ export default function Sidebar() {
       {/* Logo Area */}
       <div className="h-[72px] flex items-center px-6 border-b border-white/[0.04]">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-rose-400 to-violet-500 flex items-center justify-center shadow-lg shadow-rose-500/20 rotate-3">
+          <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-accent-400 to-violet-500 flex items-center justify-center shadow-lg shadow-accent-500/20 rotate-3">
             <Heart className="w-4 h-4 text-white -rotate-3" fill="white" />
           </div>
           <h1 className="text-xl font-display font-semibold bg-gradient-to-r from-white to-white/70 bg-clip-text text-transparent">
@@ -41,8 +41,8 @@ export default function Sidebar() {
           className={({ isActive }) =>
             `flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
               isActive 
-                ? 'bg-rose-500/20 text-rose-300 font-medium' 
-                : 'text-white/40 hover:bg-rose-500/10 hover:text-rose-400/80'
+                ? 'bg-accent-500/20 text-accent-300 font-medium' 
+                : 'text-white/40 hover:bg-accent-500/10 hover:text-accent-400/80'
             }`
           }
         >

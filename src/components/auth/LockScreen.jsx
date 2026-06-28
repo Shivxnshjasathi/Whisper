@@ -36,7 +36,7 @@ export default function LockScreen({ onUnlock }) {
     <div className="fixed inset-0 z-[100] bg-[#08010f] flex flex-col items-center justify-center p-6 animate-fade-in">
       <div className="flex-1 flex flex-col items-center justify-end pb-12">
         <div className="w-16 h-16 rounded-[24px] bg-white/5 flex items-center justify-center mb-8 border border-white/10 shadow-2xl">
-          <Lock className="w-7 h-7 text-rose-400" />
+          <Lock className="w-7 h-7 text-accent-400" />
         </div>
         <h2 className="text-xl font-semibold text-white mb-2">Enter Passcode</h2>
         <p className="text-sm text-white/40 mb-10">Unlock your Whisper diary</p>
@@ -48,7 +48,7 @@ export default function LockScreen({ onUnlock }) {
               key={i} 
               className={`w-3.5 h-3.5 rounded-full border-2 transition-all duration-200 ${
                 pin.length > i 
-                  ? error ? 'bg-red-500 border-red-500' : 'bg-rose-400 border-rose-400 scale-110'
+                  ? error ? 'bg-red-500 border-red-500' : 'bg-accent-400 border-accent-400 scale-110'
                   : 'border-white/20'
               }`}
             />

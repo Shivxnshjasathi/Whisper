@@ -1,16 +1,21 @@
 import { useAuth } from '../contexts/AuthContext';
+import { useTheme, THEMES } from '../contexts/ThemeContext';
 import Avatar from '../components/ui/Avatar';
 import Button from '../components/ui/Button';
-import { LogOut, Heart, Shield, Smartphone, Wifi, WifiOff, Moon, Bell, Download } from 'lucide-react';
+import { LogOut, Heart, Shield, Smartphone, Wifi, WifiOff, Bell, Download, Palette, FileJson } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { getPendingCount, syncPendingEntries } from '../lib/syncManager';
+import { supabase } from '../lib/supabase';
 
 export default function Settings() {
   const { user, profile, signOut } = useAuth();
+  const { theme, setTheme, themes } = useTheme();
   const [pendingCount, setPendingCount] = useState(0);
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [syncing, setSyncing] = useState(false);
   const [hasPasscode, setHasPasscode] = useState(!!localStorage.getItem('whisper_pin'));
+  const [hasReminders, setHasReminders] = useState(!!localStorage.getItem('whisper_reminders'));
+  const [isExporting, setIsExporting] = useState(false);
 
   useEffect(() => {
     const loadPending = async () => {
@@ -65,12 +70,61 @@ export default function Settings() {
     }
   };
 
+  const handleToggleReminders = async () => {
+    if (hasReminders) {
+      localStorage.removeItem('whisper_reminders');
+      setHasReminders(false);
+    } else {
+      if ('Notification' in window) {
+        const permission = await Notification.requestPermission();
+        if (permission === 'granted') {
+          localStorage.setItem('whisper_reminders', 'true');
+          setHasReminders(true);
+          alert('Reminders enabled! You will be reminded daily.');
+          // In a full implementation, you would register a Service Worker here to handle push events,
+          // or set up a local recurring notification if the browser supports it.
+        } else {
+          alert('Notification permission denied.');
+        }
+      } else {
+        alert('Your browser does not support notifications.');
+      }
+    }
+  };
+
+  const handleExportData = async () => {
+    setIsExporting(true);
+    try {
+      const { data, error } = await supabase
+        .from('entries')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      const dataStr = JSON.stringify(data, null, 2);
+      const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
+      
+      const exportFileDefaultName = 'whisper_diary_export.json';
+      
+      const linkElement = document.createElement('a');
+      linkElement.setAttribute('href', dataUri);
+      linkElement.setAttribute('download', exportFileDefaultName);
+      linkElement.click();
+    } catch (err) {
+      console.error('Export failed:', err);
+      alert('Failed to export data.');
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   return (
     <div className="px-5 py-6 animate-fade-in max-w-lg mx-auto">
       {/* Profile card */}
       <div className="glass-card p-8 mb-6 text-center relative overflow-hidden">
         {/* Decorative gradient */}
-        <div className="absolute top-0 left-0 right-0 h-24 bg-gradient-to-b from-rose-500/5 to-transparent" />
+        <div className="absolute top-0 left-0 right-0 h-24 bg-gradient-to-b from-accent-500/5 to-transparent" />
 
         <div className="relative">
           <Avatar name={profile?.displayName} size="xl" className="mx-auto mb-5" />
@@ -79,7 +133,7 @@ export default function Settings() {
           </h2>
           <p className="text-[13px] text-white/30 mb-4">{user?.email}</p>
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/[0.04] border border-white/[0.06]">
-            <Heart className="w-3.5 h-3.5 text-rose-400" fill="currentColor" />
+            <Heart className="w-3.5 h-3.5 text-accent-400" fill="currentColor" />
             <span className="text-[12px] text-white/30 font-medium">{profile?.roomName}</span>
           </div>
         </div>
@@ -151,7 +205,7 @@ export default function Settings() {
               <button
                 onClick={handleSync}
                 disabled={syncing}
-                className="text-[11px] text-rose-400 px-2 py-1 rounded-lg bg-rose-400/5 hover:bg-rose-400/10 transition-colors"
+                className="text-[11px] text-accent-400 px-2 py-1 rounded-lg bg-accent-400/5 hover:bg-accent-400/10 transition-colors"
               >
                 {syncing ? 'Syncing...' : 'Sync'}
               </button>
@@ -161,8 +215,8 @@ export default function Settings() {
 
         <div className="glass-card p-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-rose-500/10 flex items-center justify-center">
-              <Shield className="w-4 h-4 text-rose-400" />
+            <div className="w-9 h-9 rounded-xl bg-accent-500/10 flex items-center justify-center">
+              <Shield className="w-4 h-4 text-accent-400" />
             </div>
             <div>
               <span className="text-[14px] text-white/60 block">Passcode Lock</span>
@@ -178,6 +232,54 @@ export default function Settings() {
         </div>
       </div>
 
+      {/* Personalization */}
+      <div className="space-y-3 mb-6">
+        <h3 className="text-[11px] font-semibold text-white/15 uppercase tracking-[0.15em] px-1 mb-3">
+          Personalization & Preferences
+        </h3>
+
+        <div className="glass-card p-4 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-violet-500/10 flex items-center justify-center">
+              <Palette className="w-4 h-4 text-violet-400" />
+            </div>
+            <div>
+              <span className="text-[14px] text-white/60 block">Accent Color</span>
+              <span className="text-[11px] text-white/20">Choose your theme</span>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            {themes.map(t => (
+              <button
+                key={t}
+                onClick={() => setTheme(t)}
+                className={`w-6 h-6 rounded-full border-2 transition-all ${theme === t ? 'border-white scale-110' : 'border-transparent opacity-50 hover:opacity-100'}`}
+                style={{ backgroundColor: THEMES[t][500] }}
+              />
+            ))}
+          </div>
+        </div>
+
+        <div className="glass-card p-4 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-amber-500/10 flex items-center justify-center">
+              <Bell className="w-4 h-4 text-amber-400" />
+            </div>
+            <div>
+              <span className="text-[14px] text-white/60 block">Daily Reminders</span>
+              <span className="text-[11px] text-white/20">Don't forget to write</span>
+            </div>
+          </div>
+          <button
+            onClick={handleToggleReminders}
+            className={`w-11 h-6 rounded-full transition-colors flex items-center px-0.5 ${hasReminders ? 'bg-emerald-500' : 'bg-white/10'}`}
+          >
+            <div className={`w-5 h-5 rounded-full bg-white transition-transform ${hasReminders ? 'translate-x-5' : 'translate-x-0'}`} />
+          </button>
+        </div>
+
+      </div>
+
       {/* Install */}
       <div className="mb-6">
         <h3 className="text-[11px] font-semibold text-white/15 uppercase tracking-[0.15em] px-1 mb-3">
@@ -186,8 +288,8 @@ export default function Settings() {
 
         <div className="glass-card p-5">
           <div className="flex items-start gap-3">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-rose-400/10 to-violet-500/10 flex items-center justify-center flex-shrink-0">
-              <Download className="w-4 h-4 text-rose-400" />
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-accent-400/10 to-violet-500/10 flex items-center justify-center flex-shrink-0">
+              <Download className="w-4 h-4 text-accent-400" />
             </div>
             <div className="flex-1">
               <h4 className="text-[14px] font-medium text-white/70 mb-1">Install Whisper</h4>
@@ -207,7 +309,7 @@ export default function Settings() {
                     alert("The automatic install prompt isn't ready. This usually happens if you're testing on a local network without HTTPS. Please use your browser's menu and select 'Install App' or 'Add to Home screen'.");
                   }
                 }}
-                className="w-full py-2 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 rounded-xl text-[13px] font-medium transition-colors"
+                className="w-full py-2 bg-accent-500/10 hover:bg-accent-500/20 text-accent-400 rounded-xl text-[13px] font-medium transition-colors"
               >
                 Trigger Install Prompt
               </button>

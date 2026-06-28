@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { ThemeProvider } from './contexts/ThemeContext';
 import { useEffect } from 'react';
 import { initSyncManager } from './lib/syncManager';
 import { AnimatePresence } from 'framer-motion';
@@ -17,6 +18,7 @@ import Home from './pages/Home';
 import Compose from './pages/Compose';
 import Settings from './pages/Settings';
 import EntryDetail from './pages/EntryDetail';
+import CalendarView from './pages/CalendarView';
 
 // Configure React Query
 const queryClient = new QueryClient({
@@ -48,6 +50,9 @@ function AnimatedRoutes() {
           } />
           <Route path="entry/:id" element={
             <PageTransition><EntryDetail /></PageTransition>
+          } />
+          <Route path="calendar" element={
+            <PageTransition><CalendarView /></PageTransition>
           } />
           <Route path="settings" element={
             <PageTransition><Settings /></PageTransition>
@@ -114,13 +119,15 @@ export default function App() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <BrowserRouter>
-          <Routes>
-            <Route path="/*" element={<ProtectedRoutes />} />
-          </Routes>
-        </BrowserRouter>
-      </AuthProvider>
+      <ThemeProvider>
+        <AuthProvider>
+          <BrowserRouter>
+            <Routes>
+              <Route path="/*" element={<ProtectedRoutes />} />
+            </Routes>
+          </BrowserRouter>
+        </AuthProvider>
+      </ThemeProvider>
     </QueryClientProvider>
   );
 }

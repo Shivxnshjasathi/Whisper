@@ -1,6 +1,6 @@
 const COLORS = {
   Shivansh: 'from-violet-500 to-purple-600',
-  Kuhu: 'from-rose-400 to-pink-500',
+  Kuhu: 'from-accent-400 to-pink-500',
   default: 'from-gray-400 to-gray-500',
 };
 

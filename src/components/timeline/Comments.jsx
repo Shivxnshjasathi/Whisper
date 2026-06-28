@@ -36,7 +36,7 @@ export default function Comments({ entry }) {
                 <span className="text-[10px] text-white/20">•</span>
                 <span className="text-[10px] text-white/20">{new Date(comment.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
               </div>
-              <div className={`p-3 rounded-2xl text-sm w-fit max-w-[85%] ${isMe ? 'bg-rose-500/10 text-rose-100 border border-rose-500/20 rounded-tl-sm' : 'glass-card text-white/80 rounded-tr-sm'}`}>
+              <div className={`p-3 rounded-2xl text-sm w-fit max-w-[85%] ${isMe ? 'bg-accent-500/10 text-accent-100 border border-accent-500/20 rounded-tl-sm' : 'glass-card text-white/80 rounded-tr-sm'}`}>
                 {comment.content}
               </div>
             </div>
@@ -55,12 +55,12 @@ export default function Comments({ entry }) {
             value={content}
             onChange={(e) => setContent(e.target.value)}
             placeholder="Add a comment..."
-            className="flex-1 bg-white/[0.05] border border-white/10 rounded-2xl py-3 pl-4 pr-12 text-sm text-white placeholder-white/30 focus:outline-none focus:border-rose-400/50 focus:bg-white/10 transition-colors"
+            className="flex-1 bg-white/[0.05] border border-white/10 rounded-2xl py-3 pl-4 pr-12 text-sm text-white placeholder-white/30 focus:outline-none focus:border-accent-400/50 focus:bg-white/10 transition-colors"
           />
           <button
             type="submit"
             disabled={!content.trim() || addComment.isPending}
-            className="absolute right-2 w-8 h-8 flex items-center justify-center text-rose-400 hover:bg-rose-400/10 rounded-xl disabled:opacity-50 transition-colors"
+            className="absolute right-2 w-8 h-8 flex items-center justify-center text-accent-400 hover:bg-accent-400/10 rounded-xl disabled:opacity-50 transition-colors"
           >
             <Send className="w-4 h-4 -ml-0.5" />
           </button>

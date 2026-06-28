@@ -8,6 +8,7 @@ export default function VoiceRecorder({ onRecorded, recordedBlob, onClear }) {
     formattedDuration,
     audioBlob,
     audioUrl,
+    transcript,
     error,
     startRecording,
     stopRecording,
@@ -21,9 +22,9 @@ export default function VoiceRecorder({ onRecorded, recordedBlob, onClear }) {
   // When recording completes, pass the blob up
   useEffect(() => {
     if (audioBlob && !isRecording) {
-      onRecorded?.(audioBlob, audioUrl);
+      onRecorded?.(audioBlob, audioUrl, transcript);
     }
-  }, [audioBlob, isRecording]);
+  }, [audioBlob, isRecording, audioUrl, transcript]);
 
   const togglePreview = () => {
     const audio = previewAudioRef.current;
@@ -47,7 +48,7 @@ export default function VoiceRecorder({ onRecorded, recordedBlob, onClear }) {
 
   if (previewUrl && !isRecording) {
     return (
-      <div className="flex items-center gap-3 p-3 rounded-xl bg-rose-500/5 border border-rose-500/10 animate-scale-in">
+      <div className="flex items-center gap-3 p-3 rounded-xl bg-accent-500/5 border border-accent-500/10 animate-scale-in">
         <audio
           ref={previewAudioRef}
           src={previewUrl}
@@ -57,7 +58,7 @@ export default function VoiceRecorder({ onRecorded, recordedBlob, onClear }) {
         <button
           type="button"
           onClick={togglePreview}
-          className="w-9 h-9 rounded-full bg-gradient-to-br from-rose-400 to-pink-500 flex items-center justify-center shadow-lg shadow-rose-500/20 active:scale-95 transition-transform"
+          className="w-9 h-9 rounded-full bg-gradient-to-br from-accent-400 to-pink-500 flex items-center justify-center shadow-lg shadow-accent-500/20 active:scale-95 transition-transform"
         >
           {isPreviewPlaying ? (
             <Pause className="w-3.5 h-3.5 text-white" fill="white" />
@@ -92,9 +93,16 @@ export default function VoiceRecorder({ onRecorded, recordedBlob, onClear }) {
           <div className="absolute inset-0 w-3 h-3 rounded-full bg-red-500/50 animate-ping" />
         </div>
 
-        <div className="flex-1">
-          <div className="text-sm font-medium text-white">Recording...</div>
-          <div className="text-xs text-red-400 font-mono">{formattedDuration}</div>
+        <div className="flex-1 overflow-hidden">
+          <div className="text-sm font-medium text-white flex justify-between">
+            <span>Recording...</span>
+            <span className="text-red-400 font-mono">{formattedDuration}</span>
+          </div>
+          {transcript && (
+            <div className="text-xs text-white/50 mt-1 truncate animate-fade-in italic">
+              "{transcript}"
+            </div>
+          )}
         </div>
 
         <button

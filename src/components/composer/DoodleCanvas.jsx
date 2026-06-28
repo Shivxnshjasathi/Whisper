@@ -127,7 +127,7 @@ export default function DoodleCanvas({ onSave, onClose }) {
           <X className="w-6 h-6" />
         </button>
         <span className="text-white/80 font-medium">Draw a Doodle</span>
-        <button onClick={handleSave} className="w-10 h-10 flex items-center justify-center text-rose-400 active:scale-95">
+        <button onClick={handleSave} className="w-10 h-10 flex items-center justify-center text-accent-400 active:scale-95">
           <Check className="w-6 h-6" />
         </button>
       </div>

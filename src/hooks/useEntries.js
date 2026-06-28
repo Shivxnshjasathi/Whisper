@@ -63,7 +63,18 @@ export function useCreateEntry() {
   const { user, profile } = useAuth();
 
   return useMutation({
-    mutationFn: async ({ contentHtml, mediaFiles = [], voiceBlob = null, mood = null }) => {
+    mutationFn: async ({ 
+      contentHtml, 
+      mediaFiles = [], 
+      voiceBlob = null, 
+      mood = null,
+      locationLat = null,
+      locationLng = null,
+      locationName = null,
+      weatherCondition = null,
+      weatherTemp = null,
+      voiceTranscript = null
+    }) => {
       const roomId = profile?.roomId;
       if (!roomId) throw new Error('No room found');
 
@@ -75,6 +86,12 @@ export function useCreateEntry() {
             author_id: user.id,
             content_html: contentHtml,
             mood,
+            location_lat: locationLat,
+            location_lng: locationLng,
+            location_name: locationName,
+            weather_condition: weatherCondition,
+            weather_temp: weatherTemp,
+            voice_transcript: voiceTranscript
           },
           mediaFiles,
           voiceBlob
@@ -133,6 +150,12 @@ export function useCreateEntry() {
           media_urls: mediaUrls,
           voice_note_url: voiceNoteUrl,
           mood,
+          location_lat: locationLat,
+          location_lng: locationLng,
+          location_name: locationName,
+          weather_condition: weatherCondition,
+          weather_temp: weatherTemp,
+          voice_transcript: voiceTranscript
         })
         .select()
         .single();
